@@ -21,7 +21,7 @@ build/libagent.a: build/ agent.nim
 	mv libagent.a build/libagent.a
 
 build/:
-	mkdir build
+	mkdir -p build
 
 qemu: build/ramdisk build/kernel
 	qemu-system-x86_64 -enable-kvm -kernel build/kernel -initrd build/ramdisk \
