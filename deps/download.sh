@@ -11,6 +11,5 @@ download_tar() {
     rm $longname.tar.$ext
 }
 
-download_tar busybox busybox-1.22.1 bz2
 echo "Checking signatures..."
 sha1sum --check sums.sha1

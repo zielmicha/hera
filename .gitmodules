@@ -1,3 +1,6 @@
 [submodule "deps/linux"]
 	path = deps/linux
 	url = https://github.com/torvalds/linux
+[submodule "deps/busybox"]
+	path = deps/busybox
+	url = git://git.busybox.net/busybox
