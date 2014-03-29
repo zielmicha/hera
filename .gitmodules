@@ -1,0 +1,3 @@
+[submodule "deps/linux"]
+	path = deps/linux
+	url = https://github.com/torvalds/linux
