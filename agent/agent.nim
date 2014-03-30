@@ -1,12 +1,20 @@
 import os
 import osproc
 import strutils
+import json
+import selectfile
 
 const
   busyboxPath = "/bin/busybox"
 
 var
   controllerPort: TFile
+
+proc cchroot(path: cstring): cint {.importc: "chroot".}
+
+proc chroot(path: string) =
+  if cchroot(path) < 0:
+    osError(osLastError())
 
 proc busybox(cmd: seq[string]) =
   let p = startProcess(busyboxPath, args=cmd[0..cmd.len-1], options={poParentStreams})
@@ -34,18 +42,43 @@ proc setupMounts =
   mount(fs="proc", target="/proc")
   createDir("/sys")
   mount(fs="sysfs", target="/sys")
-  createDir("/target")
-  #mount(dev="/dev/vda", target="/target")
 
 proc openPort =
-  controllerPort = open("/dev/vport0p1", fmReadWrite)
-  controllerPort.write("init\n")
+  controllerPort = open("/dev/vport0p1", fmReadWrite, bufSize=0)
+
+proc writeMessage(m: PJsonNode) =
+  controllerPort.write(($m) & "\n")
   controllerPort.flushFile()
+
+proc isMessageAvailable: bool =
+  var readfd, writefd, exceptfd: seq[TFile]
+  readfd = @[controllerPort]
+  writefd = @[]
+  exceptfd = @[]
+  return select(readfd, writefd, exceptfd, timeout=500) != 0
+
+proc readMessage: PJsonNode =
+  parseJson(controllerPort.readLine)
+
+proc processMessage(message: PJsonNode): PJsonNode =
+  message["echo"] = %"yes"
+  return message
+
+proc processIncomingMessage =
+  if isMessageAvailable():
+    let message = readMessage()
+    let resp = processMessage(message)
+    writeMessage(resp)
 
 proc main =
   setupMounts()
   openPort()
-  busybox(@["sh"])
+  while true:
+    writeMessage(%{"outofband": %"heartbeat"})
+    processIncomingMessage()
 
 when isMainModule:
-  main()
+  try:
+    main()
+  finally:
+    writeMessage(%{"outofband": %"internalerror"})

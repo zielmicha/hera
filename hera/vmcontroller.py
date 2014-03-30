@@ -4,12 +4,23 @@ import os
 import tempfile
 import threading
 import time
+import json
+import Queue
+
+from hera import errors
+
+LAUNCH_TIMEOUT = 5
+HEARTBEAT_TIMEOUT = 2
+
+CLOSE = object()
 
 class VM:
     def __init__(self):
         self.pid = None
         self.init_time = time.time()
         self.process = None
+        self.write_queue = Queue.Queue(0)
+        self.read_queue = Queue.Queue(0)
 
     def start(self):
         self.start_server()
@@ -21,18 +32,20 @@ class VM:
             '-enable-kvm',
             '-kernel', 'agent/build/kernel',
             '-initrd', 'agent/build/ramdisk',
-            '-append', 'quiet', #ip=dhcp
-#            '-nographic',
+            '-append', 'quiet ip=dhcp',
+            '-nographic',
 ## Virtio serial:
             '-device', 'virtio-serial',
             '-chardev', 'socket,id=agent,path=' + self.socket_name,
             '-device', 'virtserialport,chardev=agent,name=hera.agent',
+## Network
             '-net', 'user',
             '-net', 'nic,model=rtl8139',
         ]
         devnull = open('/dev/null', 'r+')
         self.process = subprocess.Popen(args,
-                                        stdin=devnull)
+                                        stdin=devnull,
+                                        stdout=devnull)
 
     def start_server(self):
         sock = socket.socket(socket.AF_UNIX)
@@ -45,31 +58,67 @@ class VM:
 
     def run_server(self, server):
         socket, file = self._server_accept_connection(server)
-        print 'run_server'
-        while True:
-            line = file.readline()
-            if not line:
-                break
-            print '[%f]' % (time.time() - self.init_time), line.rstrip()
-        print 'vport disconnect'
-        self.close()
+        threading.Thread(target=self._writer, args=[file]).start()
+
+        try:
+            while True:
+                line = file.readline()
+                if not line:
+                    break
+                resp = json.loads(line)
+                self._process_response(resp)
+        finally:
+            self.close()
 
     def _server_accept_connection(self, server):
-        server.settimeout(5)
+        server.settimeout(LAUNCH_TIMEOUT)
         server.listen(1)
         try:
             try:
                 sock, addr = server.accept()
             except socket.error:
                 # timeout
-                self._kill_qemu()
+                self.close()
                 raise Exception("qemu didn't respond in time")
         finally:
             os.unlink(self.socket_name)
             os.rmdir(self.socket_dir)
+
+        sock.settimeout(HEARTBEAT_TIMEOUT)
         return sock, sock.makefile('r+')
 
+    def _process_response(self, resp):
+        print '[%f]' % (time.time() - self.init_time), resp
+        if 'outofband' not in resp:
+            self.read_queue.put(resp)
+
+    def _writer(self, file):
+        while True:
+            q = self.write_queue.get()
+            if q == CLOSE: break
+            message, callback = q
+            file.write(message)
+            file.flush()
+            response = self.read_queue.get()
+            callback(response)
+
+    def send_message(self, message):
+        event = threading.Event()
+        result = [None]
+
+        def callback(resp):
+            result[0] = resp
+            event.set()
+
+        message_data = json.dumps(message) + '\n'
+        self.write_queue.put((message_data, callback))
+        if event.wait(timeout=3):
+            return result[0]
+        else:
+            raise errors.TimeoutError()
+
     def close(self):
+        self.write_queue.put(CLOSE)
         self._kill_qemu()
 
     def _kill_qemu(self):
@@ -80,6 +129,7 @@ if __name__ == '__main__':
     vm = VM()
     vm.start()
     try:
+        print vm.send_message({'hello': 'world'})
         raw_input('Press enter to terminate.\n')
     finally:
         print 'terminate'
