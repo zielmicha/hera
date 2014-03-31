@@ -8,19 +8,21 @@ import json
 import Queue
 
 from hera import errors
+from hera import util
 
-LAUNCH_TIMEOUT = 5
+LAUNCH_TIMEOUT = 6
 HEARTBEAT_TIMEOUT = 2
+MESSAGE_REPLY_TIMEOUT = LAUNCH_TIMEOUT
 
 CLOSE = object()
 
 class VM:
-    def __init__(self):
-        self.pid = None
+    def __init__(self, heartbeat_callback=util.do_nothing):
         self.init_time = time.time()
         self.process = None
         self.write_queue = Queue.Queue(0)
         self.read_queue = Queue.Queue(0)
+        self.heartbeat_callback = heartbeat_callback
 
     def start(self):
         self.start_server()
@@ -67,6 +69,7 @@ class VM:
                     break
                 resp = json.loads(line)
                 self._process_response(resp)
+                socket.settimeout(HEARTBEAT_TIMEOUT)
         finally:
             self.close()
 
@@ -84,12 +87,16 @@ class VM:
             os.unlink(self.socket_name)
             os.rmdir(self.socket_dir)
 
-        sock.settimeout(HEARTBEAT_TIMEOUT)
+        sock.settimeout(LAUNCH_TIMEOUT)
         return sock, sock.makefile('r+')
 
     def _process_response(self, resp):
         print '[%f]' % (time.time() - self.init_time), resp
-        if 'outofband' not in resp:
+        if 'outofband' in resp:
+            oob_type = resp['outofband']
+            if oob_type == 'heartbeat':
+                self.heartbeat_callback()
+        else:
             self.read_queue.put(resp)
 
     def _writer(self, file):
@@ -112,7 +119,7 @@ class VM:
 
         message_data = json.dumps(message) + '\n'
         self.write_queue.put((message_data, callback))
-        if event.wait(timeout=3):
+        if event.wait(timeout=MESSAGE_REPLY_TIMEOUT):
             return result[0]
         else:
             raise errors.TimeoutError()
