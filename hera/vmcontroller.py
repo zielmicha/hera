@@ -24,14 +24,14 @@ class VM:
         self.read_queue = Queue.Queue(0)
         self.heartbeat_callback = heartbeat_callback
 
-    def start(self):
+    def start(self, **kwargs):
         self.start_server()
-        self.start_qemu()
+        self.start_qemu(**kwargs)
 
-    def start_qemu(self):
+    def start_qemu(self, memory):
         args = [
             'qemu-system-x86_64',
-            '-enable-kvm',
+#            '-enable-kvm',
             '-kernel', 'agent/build/kernel',
             '-initrd', 'agent/build/ramdisk',
             '-append', 'quiet ip=dhcp',
@@ -43,6 +43,8 @@ class VM:
 ## Network
             '-net', 'user',
             '-net', 'nic,model=rtl8139',
+## Memory
+            '-m', str(memory),
         ]
         devnull = open('/dev/null', 'r+')
         self.process = subprocess.Popen(args,
@@ -134,7 +136,7 @@ class VM:
 
 if __name__ == '__main__':
     vm = VM()
-    vm.start()
+    vm.start(memory=128)
     try:
         print vm.send_message({'hello': 'world'})
         raw_input('Press enter to terminate.\n')

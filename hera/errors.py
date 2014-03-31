@@ -3,3 +3,6 @@ class ResourceNotAvailableError(Exception):
 
 class TimeoutError(Exception):
     pass
+
+class ConnectionError(Exception):
+    pass

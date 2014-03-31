@@ -32,6 +32,14 @@ def _create_vm(request):
             return result
     raise errors.ResourceNotAvailableError()
 
+def loop():
+    listen_sock = socket.socket()
+    listen_sock.bind(('localhost', 10001))
+    listen_sock.listen(5)
+    while True:
+        sock, addr = listen_sock.accept()
+        Spawner(sock).start()
+
 class Spawner:
     # Talks to spawner.py
     def __init__(self, socket):
@@ -43,6 +51,9 @@ class Spawner:
         self.socket = socket
         self.socket.settimeout(spawner_timeout)
         self.file = self.socket.makefile('r+', 1)
+
+    def start(self):
+        threading.Thread(target=self._socket_read_loop).start()
 
     def create_vm_if_possible(self, request):
         # If estimates show that it is possible,
@@ -61,8 +72,21 @@ class Spawner:
         del self.response[request_id]
         return response
 
-    def check_and_update_estimates(self):
-        pass
+    def check_and_update_estimates(self, request):
+        # Check if spawner has enough resource that
+        # it can handle `request`. If it has decrease
+        # its resource estimates.
+        if not self.estimates:
+            return False
+
+        with self.estimate_lock:
+            new_estimates = {}
+            for k, v in self.estimates:
+                if request.stats[k] > v:
+                    return False
+                new_estimates = v - request.stats[k]
+            self.estimates = new_estimates
+            return True
 
     def _write_spawn_request(self, id, request):
         with self.write_lock:
@@ -84,8 +108,7 @@ class Spawner:
         if 'id' in data:
             id = data['id']
             self.response[id].put(data['response'])
-        else:
-            self.estimates = data['estimates']
+        self.estimates = data['estimates']
 
     def _socket_read_request(self):
         data = self.file.readline()
