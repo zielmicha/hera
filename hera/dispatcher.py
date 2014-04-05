@@ -7,6 +7,9 @@ import collections
 import threading
 import uuid
 import json
+import logging
+
+logger = logging.getLogger("dispatcher")
 
 spawner_timeout = 5
 
@@ -34,6 +37,7 @@ def _create_vm(request):
 
 def loop():
     listen_sock = socket.socket()
+    listen_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listen_sock.bind(('localhost', 10001))
     listen_sock.listen(5)
     while True:
@@ -53,6 +57,7 @@ class Spawner:
         self.file = self.socket.makefile('r+', 1)
 
     def start(self):
+        logger.info("spawner connected")
         threading.Thread(target=self._socket_read_loop).start()
 
     def create_vm_if_possible(self, request):
@@ -115,5 +120,8 @@ class Spawner:
         return json.loads(data)
 
     def _abort_all_requests(self):
-        for q in self.read_queue.values():
+        for q in self.read_queues.values():
             q.push(None)
+
+if __name__ == '__main__':
+    loop()

@@ -23,12 +23,15 @@ def loop(dispatcher_addr):
         response = {'estimates':
                     get_resources()}
         if r:
-            sleep_time = time.time() - last_request_handled
+            delta = time.time() - last_request_handled
+            sleep_time = MIN_REQUEST_INTERVAL - delta
             if sleep_time > 0:
                 time.sleep(sleep_time)
             last_request_handled = time.time()
             request = f.readline()
-            id, response = handle_request(request)
+            if not request:
+                raise errors.ConnectionError()
+            id, response = handle_request(json.loads(request))
             response['id'] = id
             response['response'] = response
         f.write(json.dumps(response) + '\n')
@@ -51,7 +54,8 @@ def get_mem_info():
     return { l[0][:-1]: int(l[1]) for l in lines }
 
 def get_free_mem():
-    return get_mem_info()['MemFree'] / 1024
+    info = get_mem_info()
+    return (info['MemFree'] + info['Cached']) / 1024
 
 def get_resources():
     return {
@@ -59,4 +63,10 @@ def get_resources():
     }
 
 if __name__ == '__main__':
-    print get_free_mem()
+    import argparse
+    parser = argparse.ArgumentParser(description='Connects to dispatcher and spawn VMs.')
+    parser.add_argument('host', help='dispatcher host')
+    parser.add_argument('port', type=int, help='dispatcher port', default=10001, nargs='?')
+    args = parser.parse_args()
+    addr = (args.host, args.port)
+    loop(addr)

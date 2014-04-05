@@ -1,4 +1,3 @@
-import sqlalchemy
 
 def add_derivative_resource(owner, values, timeout):
     pass
