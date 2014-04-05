@@ -60,7 +60,7 @@ def createvm():
         return {"status": "ok", "id": vm_id}
 
 def run_http_app():
-    bottle.run(port=10002)
+    bottle.run(port=10002, server='cherrypy')
 
 class Spawner:
     # Talks to spawner.py

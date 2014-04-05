@@ -4,7 +4,9 @@
 
 (X connects to Y)
 
-* spawner -> dispatcher (port 10001, TLS+client auth)
+* spawner -> dispatcher (VM creation, port 10001, TLS+client auth)
+* REST -> dispatcher (VM creation, port 10002, HTTP)
+* REST -> vmcontroller (commands, random port, socket)
 * agent -> stream proxy (HTTP)
 
 ### Pretty graph
@@ -19,8 +21,8 @@
             |      ---+      \
         dispatcher    |       |
             \         |       +---+
-             \/-------+           |
-          spawner                 |
+             \        |           |
+          spawner     |           |
                +------+           |
                       |           |
                   vmcontroller    |
