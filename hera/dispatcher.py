@@ -50,6 +50,7 @@ def spawners_loop():
 
 @bottle.post('/createvm')
 def createvm():
+    logger.info('Received createvm request')
     owner = bottle.request.forms['owner']
     stats = json.loads(bottle.request.forms['stats'])
     try:
@@ -70,6 +71,7 @@ class Spawner:
         self.estimate_lock = threading.Lock()
         self.estimates = None
 
+        self.closed = False
         self.socket = socket
         self.socket.settimeout(spawner_timeout)
         self.file = self.socket.makefile('rw', 1)
@@ -83,8 +85,11 @@ class Spawner:
         # If estimates show that it is possible,
         # asks spawner to create VM. Returns None
         # iff VM was not created.
+        if self.closed:
+            return None
+
         if not self.check_and_update_estimates(request):
-            return False
+            return None
 
         request_id = str(uuid.uuid4())
         q = queue.Queue(0)
@@ -95,7 +100,10 @@ class Spawner:
         except IOError:
             return None
 
-        response = q.get()
+        try:
+            response = q.get(timeout=spawner_timeout)
+        except queue.Empty:
+            return None
         del self.read_queues[request_id]
         return response
 
@@ -127,9 +135,10 @@ class Spawner:
         try:
             while True:
                 self._socket_read_one()
+        except errors.ConnectionError:
+            pass
         finally:
-            self.socket.close()
-            self._abort_all_requests()
+            self.close()
 
     def _socket_read_one(self):
         data = self._socket_read_request()
@@ -140,7 +149,15 @@ class Spawner:
 
     def _socket_read_request(self):
         data = self.file.readline()
+        if not data:
+            raise errors.ConnectionError()
         return json.loads(data)
+
+    def close(self):
+        self.closed = True
+        self.socket.close()
+        self._abort_all_requests()
+        del spawners[self]
 
     def _abort_all_requests(self):
         for q in list(self.read_queues.values()):
