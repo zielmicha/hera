@@ -4,7 +4,7 @@ import hashlib
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # use RSA private key sha512 digest
-SECRET_KEY = hashlib.sha512(open(os.path.expanduser('~/.ssh/id_rsa')).read()).hexdigest()
+SECRET_KEY = hashlib.sha512(open(os.path.expanduser('~/.ssh/id_rsa'), 'rb').read()).hexdigest()
 
 INSTALLED_APPS = (
     'south',

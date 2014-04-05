@@ -2,7 +2,7 @@ from hera import accounting
 from hera import errors
 
 import socket
-import Queue
+import queue
 import collections
 import threading
 import uuid
@@ -13,7 +13,7 @@ logger = logging.getLogger("dispatcher")
 
 spawner_timeout = 5
 
-dispatcher_queue = Queue.Queue(0)
+dispatcher_queue = queue.Queue(0)
 spawners = {}
 
 VmCreationRequest = collections.namedtuple('VmCreationRequest',
@@ -68,7 +68,7 @@ class Spawner:
             return False
 
         request_id = str(uuid.uuid4())
-        queue = Queue.Queue(0)
+        queue = queue.Queue(0)
 
         self.read_queues[request_id] = queue
         self._write_spawn_request(request_id, request)
@@ -120,7 +120,7 @@ class Spawner:
         return json.loads(data)
 
     def _abort_all_requests(self):
-        for q in self.read_queues.values():
+        for q in list(self.read_queues.values()):
             q.push(None)
 
 if __name__ == '__main__':

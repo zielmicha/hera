@@ -5,7 +5,7 @@ import tempfile
 import threading
 import time
 import json
-import Queue
+import queue
 
 from hera import errors
 from hera import util
@@ -20,8 +20,8 @@ class VM:
     def __init__(self, heartbeat_callback=util.do_nothing):
         self.init_time = time.time()
         self.process = None
-        self.write_queue = Queue.Queue(0)
-        self.read_queue = Queue.Queue(0)
+        self.write_queue = queue.Queue(0)
+        self.read_queue = queue.Queue(0)
         self.heartbeat_callback = heartbeat_callback
 
     def start(self, **kwargs):
@@ -31,7 +31,7 @@ class VM:
     def start_qemu(self, memory):
         args = [
             'qemu-system-x86_64',
-#            '-enable-kvm',
+            '-enable-kvm',
             '-kernel', 'agent/build/kernel',
             '-initrd', 'agent/build/ramdisk',
             '-append', 'quiet ip=dhcp',
@@ -90,10 +90,10 @@ class VM:
             os.rmdir(self.socket_dir)
 
         sock.settimeout(LAUNCH_TIMEOUT)
-        return sock, sock.makefile('r+')
+        return sock, sock.makefile('rw')
 
     def _process_response(self, resp):
-        print '[%f]' % (time.time() - self.init_time), resp
+        print('[%f]' % (time.time() - self.init_time), resp)
         if 'outofband' in resp:
             oob_type = resp['outofband']
             if oob_type == 'heartbeat':
@@ -138,8 +138,8 @@ if __name__ == '__main__':
     vm = VM()
     vm.start(memory=128)
     try:
-        print vm.send_message({'hello': 'world'})
-        raw_input('Press enter to terminate.\n')
+        print(vm.send_message({'hello': 'world'}))
+        input('Press enter to terminate.\n')
     finally:
-        print 'terminate'
+        print('terminate')
         vm.close()

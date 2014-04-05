@@ -39,7 +39,7 @@ def loop(dispatcher_addr):
 
 def handle_request(request):
     resources = get_resources()
-    for k, v in resources.items():
+    for k, v in list(resources.items()):
         if v < request[k]:
             response = None
             break
