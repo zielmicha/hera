@@ -8,13 +8,15 @@ import threading
 import uuid
 import json
 import logging
+import bottle
+import random
 
 logger = logging.getLogger("dispatcher")
 
 spawner_timeout = 5
 
 dispatcher_queue = queue.Queue(0)
-spawners = {}
+spawners = []
 
 VmCreationRequest = collections.namedtuple('VmCreationRequest',
                                            'owner stats res_id')
@@ -23,19 +25,21 @@ def create_vm(owner, stats):
     res = accounting.add_derivative_resource(owner, stats,
                                              timeout=60)
     try:
-        _create_vm(VmCreationRequest(owner, stats, res.id))
+        return _create_vm(VmCreationRequest(owner, stats, res.id))
     except Exception:
         res.close()
         raise
 
 def _create_vm(request):
-    for spawner in spawners:
+    shuffled_spawners = list(spawners)
+    random.shuffle(shuffled_spawners)
+    for spawner in shuffled_spawners:
         result = spawner.create_vm_if_possible(request)
         if result:
             return result
     raise errors.ResourceNotAvailableError()
 
-def loop():
+def spawners_loop():
     listen_sock = socket.socket()
     listen_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listen_sock.bind(('localhost', 10001))
@@ -43,6 +47,20 @@ def loop():
     while True:
         sock, addr = listen_sock.accept()
         Spawner(sock).start()
+
+@bottle.post('/createvm')
+def createvm():
+    owner = bottle.request.forms['owner']
+    stats = json.loads(bottle.request.forms['stats'])
+    try:
+        vm_id = create_vm(owner, stats)
+    except errors.ResourceNotAvailableError:
+        return {"status": "ResourceNotAvailableError"}
+    else:
+        return {"status": "ok", "id": vm_id}
+
+def run_http_app():
+    bottle.run(port=10002)
 
 class Spawner:
     # Talks to spawner.py
@@ -54,10 +72,11 @@ class Spawner:
 
         self.socket = socket
         self.socket.settimeout(spawner_timeout)
-        self.file = self.socket.makefile('r+', 1)
+        self.file = self.socket.makefile('rw', 1)
 
     def start(self):
         logger.info("spawner connected")
+        spawners.append(self)
         threading.Thread(target=self._socket_read_loop).start()
 
     def create_vm_if_possible(self, request):
@@ -68,13 +87,16 @@ class Spawner:
             return False
 
         request_id = str(uuid.uuid4())
-        queue = queue.Queue(0)
+        q = queue.Queue(0)
 
-        self.read_queues[request_id] = queue
-        self._write_spawn_request(request_id, request)
+        self.read_queues[request_id] = q
+        try:
+            self._write_spawn_request(request_id, request)
+        except IOError:
+            return None
 
-        response = queue.get()
-        del self.response[request_id]
+        response = q.get()
+        del self.read_queues[request_id]
         return response
 
     def check_and_update_estimates(self, request):
@@ -86,10 +108,10 @@ class Spawner:
 
         with self.estimate_lock:
             new_estimates = {}
-            for k, v in self.estimates:
+            for k, v in self.estimates.items():
                 if request.stats[k] > v:
                     return False
-                new_estimates = v - request.stats[k]
+                new_estimates[k] = v - request.stats[k]
             self.estimates = new_estimates
             return True
 
@@ -99,6 +121,7 @@ class Spawner:
                         id=id)
             self.file.write("%s\n" %
                             json.dumps(data))
+            self.file.flush()
 
     def _socket_read_loop(self):
         try:
@@ -112,7 +135,7 @@ class Spawner:
         data = self._socket_read_request()
         if 'id' in data:
             id = data['id']
-            self.response[id].put(data['response'])
+            self.read_queues[id].put(data['response'])
         self.estimates = data['estimates']
 
     def _socket_read_request(self):
@@ -121,7 +144,9 @@ class Spawner:
 
     def _abort_all_requests(self):
         for q in list(self.read_queues.values()):
-            q.push(None)
+            q.put(None)
 
 if __name__ == '__main__':
-    loop()
+    logging.basicConfig(level=logging.INFO)
+    threading.Thread(target=run_http_app).start()
+    spawners_loop()

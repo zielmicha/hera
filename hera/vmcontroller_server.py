@@ -1,4 +1,6 @@
+import uuid
+
 from hera import vmcontroller
 
 def spawn(request):
-    pass
+    return str(uuid.uuid4())

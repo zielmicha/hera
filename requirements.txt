@@ -1,2 +1,6 @@
 Django==1.6.2
 South==0.8.4
+stevedore==0.15
+virtualenv==1.11.4
+virtualenv-clone==0.2.4
+virtualenvwrapper==4.2
