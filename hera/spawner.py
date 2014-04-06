@@ -6,7 +6,6 @@ import traceback
 import logging
 
 from hera import vmcontroller_server
-from hera import accounting
 from hera import errors
 
 MEMORY_RESERVE = 500 # mb

@@ -157,7 +157,8 @@ class Spawner:
         self.closed = True
         self.socket.close()
         self._abort_all_requests()
-        del spawners[self]
+        spawners.remove(self)
+        logger.info('spawner disconnected')
 
     def _abort_all_requests(self):
         for q in list(self.read_queues.values()):

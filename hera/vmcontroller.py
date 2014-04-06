@@ -17,12 +17,15 @@ MESSAGE_REPLY_TIMEOUT = LAUNCH_TIMEOUT
 CLOSE = object()
 
 class VM:
-    def __init__(self, heartbeat_callback=util.do_nothing):
+    def __init__(self,
+                 heartbeat_callback=util.do_nothing,
+                 close_callback=util.do_nothing):
         self.init_time = time.time()
         self.process = None
         self.write_queue = queue.Queue(0)
         self.read_queue = queue.Queue(0)
         self.heartbeat_callback = heartbeat_callback
+        self.close_callback = close_callback
 
     def start(self, **kwargs):
         self.start_server()
@@ -129,6 +132,7 @@ class VM:
     def close(self):
         self.write_queue.put(CLOSE)
         self._kill_qemu()
+        self.close_callback()
 
     def _kill_qemu(self):
         if self.process:

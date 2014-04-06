@@ -1,10 +1,8 @@
 import uuid
-import subprocess
 import os
 import traceback
 import socket
 import logging
-import time
 import threading
 import json
 
@@ -22,11 +20,11 @@ def spawn(request):
     logging.info('Spawning VM with config %r on port %d', request, port)
     if os.fork() == 0:
         try:
-            loop(owner=request['owner'],
-                 stats=request['stats'],
-                 res_id=request['res_id'],
-                 secret=secret,
-                 sock=sock)
+            Server(owner=request['owner'],
+                   stats=request['stats'],
+                   res_id=request['res_id'],
+                   secret=secret,
+                   server_sock=sock).loop()
         except:
             traceback.print_exc()
         finally:
@@ -35,49 +33,71 @@ def spawn(request):
         sock.close()
         return [socket.getfqdn(), port, secret]
 
-def loop(owner, stats, res_id, secret, sock):
-    vm = vm_init(stats, res_id)
-    vm_server_loop(vm, secret, sock)
+class Server:
+    def __init__(self, owner, stats, res_id, secret, server_sock):
+        self.stats = stats
+        self.res_id = res_id
+        self.secret = secret
+        self.server_sock = server_sock
 
-def vm_init(stats, res_id):
-    last_heartbeat = [time.time()]
+    def loop(self):
+        self.init()
+        self.server_loop()
 
-    def heartbeat_callback():
-        accounting.derivative_resource_used(res_id)
+    def init(self):
+        def heartbeat_callback():
+            accounting.derivative_resource_used(self.res_id)
 
-    vm = vmcontroller.VM(heartbeat_callback=heartbeat_callback)
-    vm.start(
-        memory=stats['memory'])
-    return vm
+        self.vm = vmcontroller.VM(
+            heartbeat_callback=heartbeat_callback,
+            close_callback=self.after_close)
 
-def vm_server_loop(vm, secret, sock):
-    while True:
-        client_sock, addr = sock.accept()
-        threading.Thread(target=vm_loop,
-                         args=[vm, secret, client_sock]).start()
-        del client_sock, addr
+        self.vm.start(
+            memory=self.stats['memory'])
 
-def vm_loop(vm, secret, sock):
-    if not validate_secret(sock, secret):
-        return
+    def server_loop(self):
+        while True:
+            try:
+                client_sock, addr = self.server_sock.accept()
+            except OSError: # server_sock.close() called
+                return
+            threading.Thread(target=self.client_loop,
+                             args=[client_sock]).start()
+            del client_sock, addr
 
-    client = sock.makefile('rw', 1)
-    while True:
-        request = json.loads(client.readline())
-        process_request(vm, request)
+    def client_loop(self, sock):
+        if not self.validate_secret(sock):
+            return
 
-def validate_secret(sock, secret):
-    sock.settimeout(2.0)
+        client = sock.makefile('rw', 1)
+        while True:
+            line = client.readline()
+            if not line:
+                break
+            request = json.loads(line)
+            response = self.process_request(request)
+            client.write(json.dumps(response) + '\n')
 
-    client = sock.makefile('rw')
-    got_secret = client.readline()
-    if got_secret.strip() != secret:
-        sock.close()
-        logging.error('invalid auth')
-        return False
+    def validate_secret(self, sock):
+        sock.settimeout(2.0)
 
-    sock.settimeout(None)
-    return True
+        client = sock.makefile('rw')
+        got_secret = client.readline()
+        if got_secret.strip() != self.secret:
+            sock.close()
+            logging.error('invalid auth')
+            return False
 
-def process_request(vm, request):
-    print('VM', vm, 'request', request)
+        sock.settimeout(None)
+        return True
+
+    def process_request(self, request):
+        type = request['type']
+        if type == 'kill':
+            self.vm.close()
+            return {'status': 'ok'}
+        else:
+            return self.vm.send_message(request)
+
+    def after_close(self):
+        self.server_sock.close()
