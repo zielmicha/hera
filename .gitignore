@@ -1,3 +1,5 @@
 /old
 /data.db
+/images
+/hera/local_settings.py
 *.pyc

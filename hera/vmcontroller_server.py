@@ -5,6 +5,7 @@ import socket
 import logging
 import threading
 import json
+import time
 
 from hera import vmcontroller
 from hera import accounting
@@ -16,6 +17,7 @@ def spawn(request):
 
     port = sock.getsockname()[1]
     secret = str(uuid.uuid4())
+    vm_id = str(uuid.uuid4())
 
     logging.info('Spawning VM with config %r on port %d', request, port)
     if os.fork() == 0:
@@ -23,6 +25,7 @@ def spawn(request):
             Server(owner=request['owner'],
                    stats=request['stats'],
                    res_id=request['res_id'],
+                   vm_id=vm_id,
                    secret=secret,
                    server_sock=sock).loop()
         except:
@@ -31,14 +34,16 @@ def spawn(request):
             os._exit(1)
     else:
         sock.close()
-        return [socket.getfqdn(), port, secret]
+        return [vm_id, socket.getfqdn(), port, secret]
 
 class Server:
-    def __init__(self, owner, stats, res_id, secret, server_sock):
+    def __init__(self, owner, stats, res_id, vm_id, secret, server_sock):
         self.stats = stats
         self.res_id = res_id
+        self.vm_id = vm_id
         self.secret = secret
         self.server_sock = server_sock
+        self.start_time = time.time()
 
     def loop(self):
         self.init()
@@ -46,7 +51,11 @@ class Server:
 
     def init(self):
         def heartbeat_callback():
-            accounting.derivative_resource_used(self.res_id)
+            time_left = time.time() - self.start_time
+            if time_left > self.stats['timeout']:
+                self.vm.close()
+            accounting.derivative_resource_used(self.res_id, user_type='vm',
+                                                user_id=self.vm_id)
 
         self.vm = vmcontroller.VM(
             heartbeat_callback=heartbeat_callback,

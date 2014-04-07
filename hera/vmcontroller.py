@@ -137,6 +137,7 @@ class VM:
     def _kill_qemu(self):
         if self.process:
             self.process.kill()
+            self.process = None
 
 if __name__ == '__main__':
     vm = VM()

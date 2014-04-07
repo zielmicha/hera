@@ -1,5 +1,10 @@
+CherryPy==3.2.5
 Django==1.6.2
 South==0.8.4
+bottle==0.12.5
+ipython==2.0.0
+pyflakes==0.8.1
+requests==2.2.1
 stevedore==0.15
 virtualenv==1.11.4
 virtualenv-clone==0.2.4
