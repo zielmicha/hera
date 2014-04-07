@@ -1,14 +1,9 @@
-import os
-import osproc
-import strutils
-import json
-import selectfile
+import os, osproc, strutils, json
+
+import agentactions, agentio
 
 const
   busyboxPath = "/bin/busybox"
-
-var
-  controllerPort: TFile
 
 proc cchroot(path: cstring): cint {.importc: "chroot".}
 
@@ -42,27 +37,6 @@ proc setupMounts =
   mount(fs="proc", target="/proc")
   createDir("/sys")
   mount(fs="sysfs", target="/sys")
-
-proc openPort =
-  controllerPort = open("/dev/vport0p1", fmReadWrite, bufSize=0)
-
-proc writeMessage(m: PJsonNode) =
-  controllerPort.write(($m) & "\n")
-  controllerPort.flushFile()
-
-proc isMessageAvailable: bool =
-  var readfd, writefd, exceptfd: seq[TFile]
-  readfd = @[controllerPort]
-  writefd = @[]
-  exceptfd = @[]
-  return select(readfd, writefd, exceptfd, timeout=500) != 0
-
-proc readMessage: PJsonNode =
-  parseJson(controllerPort.readLine)
-
-proc processMessage(message: PJsonNode): PJsonNode =
-  message["echo"] = %"yes"
-  return message
 
 proc processIncomingMessage =
   if isMessageAvailable():
