@@ -6,6 +6,9 @@ from django.core import signing
 
 import requests
 import json
+import socket
+
+CALL_TIMEOUT = 600 # seconds # <-- TODO: warn in docs
 
 class Session:
     def __init__(self):
@@ -14,7 +17,7 @@ class Session:
     def create_sandbox(self, owner, memory, timeout, disk):
         owner = self.verify_owner(owner)
         disk = self.verify_disk(disk)
-        if timeout > 60:
+        if timeout > 600:
             raise ValueError('unsafely big timeout - TODO: add timeout in vm creation')
 
         data = {
@@ -36,11 +39,33 @@ class Session:
         else:
             return resp
 
-    def sandbox_action(self, id, ):
-        pass
+    def sandbox_action(self, id, args):
+        vm = models.VM.objects.get(vm_id=id)
+        # TODO: verify permissions
+        try:
+            ret = vm_call(vm.address, args)
+        except ConnectionRefusedError:
+            return {'status': 'SandboxNoLongerAlive'}
+        return ret
 
     def verify_owner(self, owner):
         return '_' + owner
 
     def verify_disk(self, disk):
         return None
+
+def vm_call(addr, args, expect_response=True):
+    host, port, secret = addr.split(',')
+    sock = socket.socket()
+    sock.settimeout(CALL_TIMEOUT)
+    sock.connect((host, int(port)))
+
+    sock.sendall((secret + '\n').encode())
+    sock.sendall((json.dumps(args) + '\n').encode())
+
+    file = sock.makefile('r', 1)
+    if expect_response:
+        response = file.readline()
+        if not response:
+            raise ConnectionRefusedError()
+        return json.loads(response)

@@ -13,8 +13,13 @@ def create_sandbox():
         disk=int(request.forms['disk']),
     )
 
+@bottle.post('/sandbox/:id/:action')
+def sandbox_action(id, action):
+    return get_session().sandbox_action(
+        id, dict(request.forms, type=action))
+
 def get_session():
     return api.Session()
 
 if __name__ == '__main__':
-    bottle.run(host='localhost', port=8080)
+    bottle.run(host='localhost', port=8080, server='cherrypy')

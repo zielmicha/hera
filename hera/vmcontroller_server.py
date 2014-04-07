@@ -75,10 +75,11 @@ class Server:
             del client_sock, addr
 
     def client_loop(self, sock):
-        if not self.validate_secret(sock):
+        client = sock.makefile('rw', 1)
+
+        if not self.validate_secret(sock, client):
             return
 
-        client = sock.makefile('rw', 1)
         while True:
             line = client.readline()
             if not line:
@@ -87,11 +88,10 @@ class Server:
             response = self.process_request(request)
             client.write(json.dumps(response) + '\n')
 
-    def validate_secret(self, sock):
+    def validate_secret(self, sock, file):
         sock.settimeout(2.0)
 
-        client = sock.makefile('rw')
-        got_secret = client.readline()
+        got_secret = file.readline()
         if got_secret.strip() != self.secret:
             sock.close()
             logging.error('invalid auth')
