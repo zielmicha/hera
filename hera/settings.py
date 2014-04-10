@@ -49,6 +49,7 @@ PROXY_HTTP_ADDR = ('localhost', 10005)
 
 PROXY_WS = 'ws://%s:%d/' % PROXY_WS_ADDR
 PROXY_HTTP = 'http://%s:%d/' % PROXY_HTTP_ADDR
+PROXY_IS_LOCAL = True
 
 REDIS_ADDR = ('localhost', 6379)
 REDIS_DB_BASE = 'hera_'

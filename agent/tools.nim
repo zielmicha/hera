@@ -23,5 +23,12 @@ proc readAll*(fd: TFileHandle): string =
       osError(osLastError())
     result.add buff[0..r-1]
 
+proc readFileFixed*(filename: string): TaintedString =
+  var f = open(filename)
+  try:
+    result = f.fileHandle.readAll
+  finally:
+    close(f)
+
 when isMainModule:
   echo randomIdent()

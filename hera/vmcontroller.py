@@ -31,13 +31,13 @@ class VM:
         self.start_server()
         self.start_qemu(**kwargs)
 
-    def start_qemu(self, memory):
+    def start_qemu(self, memory, cmdline=''):
         args = [
             'qemu-system-x86_64',
             '-enable-kvm',
             '-kernel', 'agent/build/kernel',
             '-initrd', 'agent/build/ramdisk',
-            '-append', 'quiet ip=dhcp',
+            '-append', 'quiet ip=dhcp ' + cmdline,
             '-nographic',
 ## Virtio serial:
             '-device', 'virtio-serial',

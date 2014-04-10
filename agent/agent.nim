@@ -1,6 +1,6 @@
-import os, osproc, strutils, json
+import os, osproc, strutils, json, strtabs
 
-import agentactions, agentio
+import agentactions, agentio, tools
 
 const
   busyboxPath = "/bin/busybox"
@@ -17,6 +17,16 @@ proc busybox(cmd: seq[string]) =
   if code != 0:
     raise newException(EIO, "call to $1 failed" % [cmd.repr])
 
+proc parseKernelCmdline(line: string): PStringTable =
+  result = newStringTable()
+  for part in line.strip.split(' '):
+    let s = part.split('=')
+    if s.len == 2:
+      result[s[0]] = s[1]
+
+proc getKernelCmdline: PStringTable =
+  readFileFixed("/proc/cmdline").parseKernelCmdline
+
 proc mount(target: string, dev: string = nil, fs: string = nil) =
   assert fs != nil or dev != nil
   var dev = dev
@@ -29,6 +39,11 @@ proc mount(target: string, dev: string = nil, fs: string = nil) =
   cmd.add dev
   cmd.add target
   busybox(cmd)
+
+proc setupOptions =
+  let table = getKernelCmdline()
+  agentactions.proxyRemoteAddr = table["hera.proxy_remote"]
+  agentactions.proxyLocalAddr = table["hera.proxy_local"]
 
 proc setupMounts =
   createDir("/dev")
@@ -47,6 +62,7 @@ proc processIncomingMessage =
 proc main =
   setupMounts()
   openPort()
+  setupOptions()
   while true:
     writeMessage(%{"outofband": %"heartbeat"})
     processIncomingMessage()

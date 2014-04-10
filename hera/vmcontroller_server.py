@@ -9,6 +9,7 @@ import time
 
 from hera import vmcontroller
 from hera import accounting
+from hera import settings
 
 def spawn(request):
     sock = socket.socket()
@@ -62,7 +63,17 @@ class Server:
             close_callback=self.after_close)
 
         self.vm.start(
-            memory=self.stats['memory'])
+            memory=self.stats['memory'],
+            cmdline=self.get_cmdline())
+
+    def get_cmdline(self):
+        proxy_local = settings.PROXY_RAW_ADDR
+        if settings.PROXY_IS_LOCAL:
+            # use host address inside Qemu user network
+            proxy_local = '10.0.2.2', proxy_local[1]
+        cmdline = 'hera.proxy_local=%s:%d' % proxy_local
+        cmdline += ' hera.proxy_remote=' + settings.PROXY_HTTP
+        return cmdline
 
     def server_loop(self):
         while True:

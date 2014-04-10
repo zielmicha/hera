@@ -14,8 +14,8 @@ id = resp['id']
 print(id)
 resp = requests.post(host + 'sandbox/' + id + '/exec', data={
     'sync': 'true',
-    'args': json.dumps(["/bin/busybox", "ls", "/"]),
+    'args': json.dumps(["/bin/busybox", "sh", "-c", "echo hello world; busybox cat /proc/cmdline"]),
     'stderr': 'stdout',
 })
 resp.raise_for_status()
-print(resp.json())
+print(resp.json()['stdout'])

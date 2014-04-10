@@ -1,5 +1,9 @@
-import json, strtabs, streams, posix, os
+import json, strtabs, streams, posix, os, sockets, strutils
 import jsontool, proxyclient, agentio, process, tools
+
+var
+  proxyRemoteAddr*: string
+  proxyLocalAddr*: string
 
 proc setupEnviron(message: PJsonNode): PStringTable =
   nil
@@ -38,8 +42,24 @@ proc makePipeSync(read: bool): TPipe =
 proc makePipesSync(): auto =
   (makePipeSync(read=true), makePipeSync(read=false), makePipeSync(read=false))
 
+proc makePipeNorm(): TPipe =
+  let url = proxyRemoteAddr & "stream/"
+  let id = randomIdent()
+  var sock: TSocket = socket()
+  let parsedAddr = proxyLocalAddr.split(':')
+  sock.connect(parsedAddr[0], TPort(parsedAddr[1].parseInt))
+  sock.send("id=$1 role=server\n" % id)
+
+  proc finish(): string =
+    return url & id
+
+  return (TFileHandle(sock.getFd()), finish)
+
 proc makePipesNorm(stderrToStdout: bool): auto =
-  makePipesSync()
+  let stdPipe = makePipeNorm()
+  let errPipe = if not stderrToStdout: makePipeNorm()
+                else: stdPipe # whatever
+  return (stdPipe, stdPipe, errPipe)
 
 proc exec(message: PJsonNode): PJsonNode =
   let stderrToStdout = message.getString("stderr") == "stdout"
