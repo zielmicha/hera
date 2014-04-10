@@ -1,16 +1,12 @@
-import json, osproc, strtabs, streams
-import jsontool, proxyclient, agentio
+import json, strtabs, streams, posix, os
+import jsontool, proxyclient, agentio, process, tools
 
 proc setupEnviron(message: PJsonNode): PStringTable =
   nil
 
-proc spawnProc(message: PJsonNode): PProcess =
-  let stderrToStdout = message.getString("stderr") == "stdout"
+proc makeArgs(message: PJsonNode): seq[string] =
   let command = message.getString("command")
-  var options: set[TProcessOption] = {}
-
-  if stderrToStdout:
-    options = options + {poStderrToStdout}
+  let useChroot = message.getBool("chroot", true)
 
   var args: seq[string] = @[]
   if command == nil:
@@ -18,32 +14,62 @@ proc spawnProc(message: PJsonNode): PProcess =
       args.add arg.str
   else:
     args = @["/bin/sh", "-c", command]
+  return args
 
-  return startProcess(args[0], "/",
-                      args[1..args.len-1],
-                      setupEnviron(message),
-                      options)
+type TPipe = Tuple[procFd: TFileHandle, finish: proc(): string]
 
-proc readAll(stream: PStream): string =
-  result = ""
-  while true:
-    let data = stream.readStr 4096
-    if data.len == 0:
-      break
-    result.add data
+proc makePipeSync(read: bool): TPipe =
+  var fds: array[0..1, cint]
+  if pipe(fds) < 0:
+    osError(osLastError())
+  if not read:
+    swap(fds[0], fds[1])
+
+  proc finish(): string =
+    if read:
+      return nil
+    else:
+      let data = fds[1].readAll
+      discard fds[1].close
+      return data
+
+  return (fds[0], finish)
+
+proc makePipesSync(): auto =
+  (makePipeSync(read=true), makePipeSync(read=false), makePipeSync(read=false))
+
+proc makePipesNorm(stderrToStdout: bool): auto =
+  makePipesSync()
 
 proc exec(message: PJsonNode): PJsonNode =
   let stderrToStdout = message.getString("stderr") == "stdout"
-  let useChroot = message.getBool("chroot", true)
   let doSync = message.getBool("sync", false)
-  result = %{"status": %"ok"}
+
+  let args = makeArgs(message)
+  var (stdin, stdout, stderr) = if doSync: makePipesSync()
+                                else: makePipesNorm(stderrToStdout)
+  if stderrToStdout:
+    stderr = stdout
+
+  let pid = startProcess(args, files=[stdin.procFd, stdout.procFd, stderr.procFd])
+
+  discard stdin.procFd.close
+  discard stdout.procFd.close
+  if not stderrToStdout:
+    discard stderr.procFd.close
+
+  var response = %{"status": %"ok"}
+  response["stdin"] = nullsafeJson(stdin.finish())
+  response["stdout"] = nullsafeJson(stdout.finish())
+  if not stderrToStdout:
+    response["stderr"] = nullsafeJson(stderr.finish())
   if doSync:
-    let p = spawnProc(message)
-    result["stdout"] = %(p.outputStream.readAll)
-    if not stderrToStdout:
-      result["stderr"] = %(p.errorStream.readAll)
-  else:
-    assert false
+    var status: cint
+    if waitpid(pid, status, 0) < 0:
+      osError(osLastError())
+    response["status"] = %(wExitStatus(status))
+
+  return response
 
 proc processMessage*(message: PJsonNode): PJsonNode =
   let msgType = message["type"].str
@@ -54,3 +80,8 @@ proc processMessage*(message: PJsonNode): PJsonNode =
       raise newException(E_Synch, "synthetic_error")
     else:
       return %{"status": %"UnknownMessageType"}
+
+when isMainModule:
+  let arg = parseJson(paramStr(1))
+  let resp = exec(arg)
+  echo resp

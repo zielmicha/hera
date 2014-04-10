@@ -26,3 +26,9 @@ proc getSubjson*(node: PJsonNode, key: string): PJsonNode =
     return nil
   else:
     return parseJson(v.str)
+
+proc nullsafeJson*(data: string): auto =
+  if data == nil:
+    return newJNull()
+  else:
+    return %data

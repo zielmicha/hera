@@ -18,8 +18,8 @@ proc log*(message: string) =
                  "line": %message})
 
 proc isMessageAvailable*: bool =
-  var readfd, writefd, exceptfd: seq[TFile]
-  readfd = @[controllerPort]
+  var readfd, writefd, exceptfd: seq[TFileHandle]
+  readfd = @[controllerPort.fileHandle]
   writefd = @[]
   exceptfd = @[]
   return select(readfd, writefd, exceptfd, timeout=500) != 0

@@ -1,3 +1,5 @@
+NIMRODSOURCES=$(wildcard *.nim)
+
 build/ramdisk: build/agent build/busybox
 	mkdir -p build/initrd/bin
 	cp build/agent build/initrd/init
@@ -15,10 +17,14 @@ build/kernel:
 build/agent: build/libagent.a
 	gcc fakedl.c build/libagent.a -static -o build/agent
 
-build/libagent.a: build/ agent.nim
+build/libagent.a: build/ $(NIMRODSOURCES)
 	nimrod '--nimcache:build/nimcache' '--verbosity:0' '--app:staticlib' \
 	  '--out:build/libagent.a' compile agent
 	mv libagent.a build/libagent.a
+
+build/agentactions: $(NIMRODSOURCES)
+	nimrod '--nimcache:build/nimcache' '--verbosity:0' '--out:build/agentactions' \
+	  compile agentactions
 
 build/:
 	mkdir -p build

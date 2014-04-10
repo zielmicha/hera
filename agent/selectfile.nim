@@ -1,17 +1,17 @@
 # Implementation of select for files.
 import posix
 
-proc createFdSet(fd: var TFdSet, s: seq[TFile], m: var int) =
+proc createFdSet(fd: var TFdSet, s: seq[TFileHandle], m: var int) =
   FD_ZERO(fd)
   for i in items(s):
-    m = max(m, int(i.fileHandle))
-    FD_SET(i.fileHandle, fd)
+    m = max(m, int(i))
+    FD_SET(i, fd)
 
-proc pruneFdSet(s: var seq[TFile], fd: var TFdSet) =
+proc pruneFdSet(s: var seq[TFileHandle], fd: var TFdSet) =
   var i = 0
   var L = s.len
   while i < L:
-    if FD_ISSET(s[i].fileHandle, fd) == 0'i32:
+    if FD_ISSET(s[i], fd) == 0'i32:
       s[i] = s[L-1]
       dec(L)
     else:
@@ -24,7 +24,7 @@ proc timeValFromMilliseconds(timeout = 500): Ttimeval =
     result.tv_sec = seconds.int32
     result.tv_usec = ((timeout - seconds * 1000) * 1000).int32
 
-proc select*(readfds, writefds, exceptfds: var seq[TFile],
+proc select*(readfds, writefds, exceptfds: var seq[TFileHandle],
              timeout = 500): int {.tags: [FReadIO].} =
   ## Traditional select function. This function will return the number of
   ## sockets that are ready to be read from, written to, or which have errors.
