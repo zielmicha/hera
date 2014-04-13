@@ -10,6 +10,7 @@ import time
 from hera import vmcontroller
 from hera import accounting
 from hera import settings
+from hera import disks
 
 def spawn(request):
     sock = socket.socket()
@@ -39,11 +40,13 @@ def spawn(request):
 
 class Server:
     def __init__(self, owner, stats, res_id, vm_id, secret, server_sock):
+        self.owner = owner
         self.stats = stats
         self.res_id = res_id
         self.vm_id = vm_id
         self.secret = secret
         self.server_sock = server_sock
+        self.disk = None
         self.start_time = time.time()
 
     def loop(self):
@@ -58,12 +61,15 @@ class Server:
             accounting.derivative_resource_used(self.res_id, user_type='vm',
                                                 user_id=self.vm_id)
 
+        self.disk = disks.get_or_create_disk(self.stats['disk'], self.owner)
+
         self.vm = vmcontroller.VM(
             heartbeat_callback=heartbeat_callback,
             close_callback=self.after_close)
 
         self.vm.start(
             memory=self.stats['memory'],
+            disk=self.disk.path,
             cmdline=self.get_cmdline())
 
     def get_cmdline(self):
@@ -73,6 +79,8 @@ class Server:
             proxy_local = '10.0.2.2', proxy_local[1]
         cmdline = 'hera.proxy_local=%s:%d' % proxy_local
         cmdline += ' hera.proxy_remote=' + settings.PROXY_HTTP
+        if self.disk.new:
+            cmdline += ' hera.format_disk=true'
         return cmdline
 
     def server_loop(self):
@@ -121,3 +129,4 @@ class Server:
 
     def after_close(self):
         self.server_sock.close()
+        self.disk.decref()

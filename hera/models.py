@@ -25,3 +25,11 @@ class ResourceRefreshed(models.Model):
 
 class Owner(models.Model):
     pass
+
+class Disk(models.Model):
+    owner = models.ForeignKey('Owner', null=True)
+    public = models.BooleanField(default=False)
+    refcount = models.IntegerField(default=0)
+
+    def check_owner(self, owner):
+        pass

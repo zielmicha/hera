@@ -10,7 +10,7 @@ def create_sandbox():
         owner=request.forms['owner'],
         memory=int(request.forms['memory']),
         timeout=float(request.forms['timeout']),
-        disk=int(request.forms['disk']),
+        disk=request.forms['disk'],
     )
 
 @bottle.post('/sandbox/:id/:action')

@@ -12,7 +12,7 @@ resp = requests.post(host + 'sandbox/', data={
     'owner': 'foouser',
     'timeout': 120,
     'memory': 128,
-    'disk': 123
+    'disk': 'new,5G',
 })
 resp.raise_for_status()
 resp = resp.json()

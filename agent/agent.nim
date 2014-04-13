@@ -5,6 +5,9 @@ import agentactions, agentio, tools
 const
   busyboxPath = "/bin/busybox"
 
+var
+  requestedDiskFormat = false
+
 proc cchroot(path: cstring): cint {.importc: "chroot".}
 
 proc chroot(path: string) =
@@ -44,6 +47,7 @@ proc setupOptions =
   let table = getKernelCmdline()
   agentactions.proxyRemoteAddr = table["hera.proxy_remote"]
   agentactions.proxyLocalAddr = table["hera.proxy_local"]
+  requestedDiskFormat = table["hera.format_disk"] == "true"
 
 proc setupMounts =
   createDir("/dev")
@@ -52,6 +56,12 @@ proc setupMounts =
   mount(fs="proc", target="/proc")
   createDir("/sys")
   mount(fs="sysfs", target="/sys")
+
+proc prepareDisk =
+  if requestedDiskFormat:
+    busybox(@["mkfs.ext2", "/dev/vda"])
+  createDir("/mnt")
+  mount(dev="/dev/vda", target="/mnt")
 
 proc processIncomingMessage =
   if isMessageAvailable():
@@ -63,6 +73,7 @@ proc main =
   setupMounts()
   openPort()
   setupOptions()
+  prepareDisk()
   while true:
     writeMessage(%{"outofband": %"heartbeat"})
     processIncomingMessage()

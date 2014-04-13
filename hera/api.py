@@ -25,7 +25,8 @@ class Session:
             'stats': json.dumps({
                 'memory': memory,
                 'timeout': timeout,
-            })
+                'disk': disk,
+            }),
         }
         resp = requests.post(settings.DISPATCHER_HTTP + 'createvm',
                              data=data)
@@ -52,7 +53,10 @@ class Session:
         return '_' + owner
 
     def verify_disk(self, disk):
-        return None
+        if disk.startswith('new,'):
+            return disk
+        else:
+            return None
 
 def vm_call(addr, args, expect_response=True):
     host, port, secret = addr.split(',')
