@@ -60,6 +60,9 @@ class Disk:
             refcount=F('refcount') + dir)
         self.model = models.Disk.objects.get(pk=self.model.pk)
         if self.model.refcount == 0:
+            if self.model.backing:
+                backing = Disk(self.model.backing)
+                backing.decref()
             try:
                 os.remove(self.path)
             except FileNotFoundError:
@@ -90,7 +93,7 @@ class Disk:
         new_disk = models.Disk(owner=owner,
                                refcount=1,
                                timeout=timeout)
-        new_disk.backing = template.orig
+        new_disk.backing = template.disk
         new_disk.save()
 
         orig = Disk(template.disk)

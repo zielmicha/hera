@@ -122,6 +122,9 @@ class Server:
         return True
 
     def process_request(self, request):
+        if not isinstance(request, dict) or 'type' not in request:
+            logging.error('malformed request: %r', request)
+            return {'status': 'MalformedRequest'}
         type = request['type']
         if type == 'kill':
             self.vm.close()

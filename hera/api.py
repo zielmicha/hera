@@ -50,7 +50,7 @@ class Session:
         return ret
 
     def vm_call(self, vm, action, args):
-        return vm_call(vm.address, dict(args, action=action))
+        return vm_call(vm.address, dict(args, type=action))
 
     def verify_owner(self, owner):
         return '_' + owner
@@ -59,7 +59,8 @@ class Session:
         if disk.startswith('new,'):
             return disk
         else:
-            return None
+            # TODO: verify permissions
+            return disk
 
 def vm_call(addr, args, expect_response=True):
     host, port, secret = addr.split(',')

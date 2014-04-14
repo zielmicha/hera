@@ -10,7 +10,7 @@ import queue
 from hera import errors
 from hera import util
 
-LAUNCH_TIMEOUT = 6
+LAUNCH_TIMEOUT = 8
 HEARTBEAT_TIMEOUT = 2
 MESSAGE_REPLY_TIMEOUT = LAUNCH_TIMEOUT
 

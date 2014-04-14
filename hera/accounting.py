@@ -2,9 +2,8 @@ from hera import models
 
 def add_derivative_resource(owner, values, timeout):
     res = models.DerivativeResource()
-    res.owner = models.Owner.objects.get(name=owner)
-    res.timeout = timeout
-    res.save()
+    # TODO: save etc
+    return res
 
 def add_resource_usage(owner, values, time):
     pass
