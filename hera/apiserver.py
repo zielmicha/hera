@@ -16,7 +16,7 @@ def create_sandbox():
 @bottle.post('/sandbox/:id/:action')
 def sandbox_action(id, action):
     return get_session().sandbox_action(
-        id, dict(request.forms, type=action))
+        id, action, request.forms)
 
 def get_session():
     return api.Session()

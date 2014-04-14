@@ -27,6 +27,9 @@ class VM:
         self.heartbeat_callback = heartbeat_callback
         self.close_callback = close_callback
 
+        self.lock = threading.Lock()
+        self.closed = False
+
     def start(self, **kwargs):
         self.start_server()
         self.start_qemu(**kwargs)
@@ -132,6 +135,12 @@ class VM:
             raise errors.TimeoutError()
 
     def close(self):
+        with self.lock:
+            # ensure close occurs only once
+            if self.closed:
+                return
+            self.closed = True
+
         self.write_queue.put(CLOSE)
         self._kill_qemu()
         self.close_callback()

@@ -28,8 +28,20 @@ class Owner(models.Model):
 
 class Disk(models.Model):
     owner = models.ForeignKey('Owner', null=True)
-    public = models.BooleanField(default=False)
     refcount = models.IntegerField(default=0)
+    backing = models.ForeignKey('Disk', null=True)
+
+    created = models.DateTimeField(auto_now_add=True)
+    timeout = models.FloatField(default=float('inf'))
+
+    def check_owner(self, owner):
+        pass
+
+class Template(models.Model):
+    owner = models.ForeignKey('Owner', null=True)
+    public = models.BooleanField(default=False)
+    disk = models.ForeignKey('Disk')
+    name = models.CharField(max_length=300, null=True)
 
     def check_owner(self, owner):
         pass

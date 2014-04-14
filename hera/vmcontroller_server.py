@@ -61,7 +61,9 @@ class Server:
             accounting.derivative_resource_used(self.res_id, user_type='vm',
                                                 user_id=self.vm_id)
 
-        self.disk = disks.get_or_create_disk(self.stats['disk'], self.owner)
+        self.disk = disks.clone_or_create_disk(self.stats['disk'],
+                                               owner=self.owner,
+                                               timeout=self.stats['timeout'])
 
         self.vm = vmcontroller.VM(
             heartbeat_callback=heartbeat_callback,
@@ -124,9 +126,22 @@ class Server:
         if type == 'kill':
             self.vm.close()
             return {'status': 'ok'}
+        elif type == 'create_template':
+            return self.create_template(request.get('name'))
         else:
             return self.vm.send_message(request)
+
+    def create_template(self, name):
+        resp = self.vm.send_message({'type': 'prepare_for_death'})
+        if resp['status'] != 'ok':
+            return resp
+
+        template = self.disk.save_as_template(name)
+
+        self.vm.close()
+        return {'status': 'ok', 'id': template.id}
 
     def after_close(self):
         self.server_sock.close()
         self.disk.decref()
+        self.disk = None

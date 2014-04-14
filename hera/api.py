@@ -40,14 +40,17 @@ class Session:
         else:
             return resp
 
-    def sandbox_action(self, id, args):
+    def sandbox_action(self, id, action, args):
         vm = models.VM.objects.get(vm_id=id)
         # TODO: verify permissions
         try:
-            ret = vm_call(vm.address, args)
+            ret = self.vm_call(vm, action, args)
         except ConnectionRefusedError:
             return {'status': 'SandboxNoLongerAlive'}
         return ret
+
+    def vm_call(self, vm, action, args):
+        return vm_call(vm.address, dict(args, action=action))
 
     def verify_owner(self, owner):
         return '_' + owner

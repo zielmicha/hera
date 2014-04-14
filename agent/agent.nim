@@ -1,24 +1,9 @@
-import os, osproc, strutils, json, strtabs
+import os, strutils, json, strtabs
 
 import agentactions, agentio, tools
 
-const
-  busyboxPath = "/bin/busybox"
-
 var
   requestedDiskFormat = false
-
-proc cchroot(path: cstring): cint {.importc: "chroot".}
-
-proc chroot(path: string) =
-  if cchroot(path) < 0:
-    osError(osLastError())
-
-proc busybox(cmd: seq[string]) =
-  let p = startProcess(busyboxPath, args=cmd[0..cmd.len-1], options={poParentStreams})
-  let code = p.waitForExit()
-  if code != 0:
-    raise newException(EIO, "call to $1 failed" % [cmd.repr])
 
 proc parseKernelCmdline(line: string): PStringTable =
   result = newStringTable()

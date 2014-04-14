@@ -91,11 +91,22 @@ proc exec(message: PJsonNode): PJsonNode =
 
   return response
 
+proc prepareForDeath: auto =
+  # Kill all processes except for self (init)
+  discard kill(-1, 9)
+  # Umount disk and sync
+  busybox(@["umount", "-l", "/mnt"])
+  busybox(@["sync"])
+  # Ready for being killed safely.
+  return %{"status": %"ok"}
+
 proc processMessage*(message: PJsonNode): PJsonNode =
   let msgType = message["type"].str
   case msgType:
     of "exec":
       return exec(message)
+    of "prepare_for_death":
+      return prepareForDeath()
     of "synthetic_error":
       raise newException(E_Synch, "synthetic_error")
     else:

@@ -1,7 +1,22 @@
-import json, selectfile
+import json, selectfile, os, osproc, strutils
 
 var
   controllerPort*: TFile
+
+const
+  busyboxPath = "/bin/busybox"
+
+proc cchroot(path: cstring): cint {.importc: "chroot".}
+
+proc chroot*(path: string) =
+  if cchroot(path) < 0:
+    osError(osLastError())
+
+proc busybox*(cmd: seq[string]) =
+  let p = startProcess(busyboxPath, args=cmd[0..cmd.len-1], options={poParentStreams})
+  let code = p.waitForExit()
+  if code != 0:
+    raise newException(EIO, "call to $1 failed" % [cmd.repr])
 
 proc writeMessage*(m: PJsonNode) =
   controllerPort.write(($m) & "\n")
