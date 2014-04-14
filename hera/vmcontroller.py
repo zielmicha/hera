@@ -119,7 +119,7 @@ class VM:
             response = self.read_queue.get()
             callback(response)
 
-    def send_message(self, message):
+    def send_message(self, message, want_reply=True):
         event = threading.Event()
         result = [None]
 
@@ -129,6 +129,10 @@ class VM:
 
         message_data = json.dumps(message) + '\n'
         self.write_queue.put((message_data, callback))
+
+        if not want_reply:
+            return
+
         if event.wait(timeout=MESSAGE_REPLY_TIMEOUT):
             return result[0]
         else:

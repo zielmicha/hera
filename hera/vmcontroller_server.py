@@ -135,16 +135,21 @@ class Server:
             return self.vm.send_message(request)
 
     def create_template(self, name):
+        disk = self.disk
+        self.disk = None # keep disk from beging GCed
+
         resp = self.vm.send_message({'type': 'prepare_for_death'})
         if resp['status'] != 'ok':
             return resp
 
-        template = self.disk.save_as_template(name)
+        self.vm.send_message({'type': 'halt'}, want_reply=False)
+        template = disk.save_as_template(name)
 
-        self.vm.close()
+        disk.decref()
         return {'status': 'ok', 'id': template.id}
 
     def after_close(self):
         self.server_sock.close()
-        self.disk.decref()
-        self.disk = None
+        if self.disk:
+            self.disk.decref()
+            self.disk = None

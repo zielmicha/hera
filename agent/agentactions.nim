@@ -100,6 +100,9 @@ proc prepareForDeath: auto =
   # Ready for being killed safely.
   return %{"status": %"ok"}
 
+proc halt =
+  writeFile("/proc/sysrq-trigger", "o\n")
+
 proc processMessage*(message: PJsonNode): PJsonNode =
   let msgType = message["type"].str
   case msgType:
@@ -107,6 +110,9 @@ proc processMessage*(message: PJsonNode): PJsonNode =
       return exec(message)
     of "prepare_for_death":
       return prepareForDeath()
+    of "halt":
+      halt()
+      return %{"status": %"HaltFailed"}
     of "synthetic_error":
       raise newException(E_Synch, "synthetic_error")
     else:
