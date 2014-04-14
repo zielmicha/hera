@@ -12,6 +12,8 @@ from hera import accounting
 from hera import settings
 from hera import disks
 
+HALT_TIMEOUT = 0.2
+
 def spawn(request):
     sock = socket.socket()
     sock.bind(('0.0.0.0', 0))
@@ -143,6 +145,7 @@ class Server:
             return resp
 
         self.vm.send_message({'type': 'halt'}, want_reply=False)
+        time.sleep(HALT_TIMEOUT)
         template = disk.save_as_template(name)
 
         disk.decref()
