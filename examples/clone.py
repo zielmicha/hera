@@ -1,26 +1,10 @@
-import requests
-import json
-host = 'http://localhost:8080/'
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-resp = requests.post(host + 'sandbox/', data={
-    'owner': 'foouser',
-    'timeout': 15,
-    'memory': 128,
-    'disk': 'new,10M'
-})
-resp.raise_for_status()
-resp = resp.json()
-id = resp['id']
-print(id)
-resp = requests.post(host + 'sandbox/' + id + '/exec', data={
-    'sync': 'true',
-    'args': json.dumps(["/bin/busybox", "sh", "-c", "echo hello > /mnt/foobar"]),
-    'stderr': 'stdout',
-    'chroot': False,
-})
-resp.raise_for_status()
-resp = requests.post(host + 'sandbox/' + id + '/create_template', data={
-    'name': 'foo',
-})
-resp.raise_for_status()
-print(resp.json())
+import heraclient
+s = heraclient.Sandbox.create(timeout=15, disk=heraclient.new_disk(size='10M'))
+proc = s.execute(chroot=False, sync=True, args=['busybox', 'sh', '-c',
+                                                'echo hello > /mnt/world'])
+template = s.save_as_template()
+print('Saved as template with id:', template.id)
