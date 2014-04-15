@@ -1,7 +1,7 @@
 import asyncio
 import logging
-import json
 import collections
+import websockets
 
 from hera import settings
 
@@ -25,6 +25,29 @@ def client_connected(reader, writer):
 
     asyncio.async(client_read(client, reader))
     asyncio.async(client_write(client, writer))
+
+
+@asyncio.coroutine
+def ws_client_connected(websocket, uri):
+    prefix = '/stream/'
+    if uri.startswith(prefix):
+        attrs = decode_ws_uri(uri[len(prefix):])
+        client = yield from client_get(attrs)
+
+        if not client:
+            return
+
+        asyncio.async(ws_client_read(client, websocket))
+        yield from ws_client_write(client, websocket)
+
+def decode_ws_uri(uri):
+    id, _, query = uri.partition('?')
+    args = {'id': id}
+    for part in query.split('&'):
+        if '=' in part:
+            k, v = part.split('=', 1)
+            args[k] = v
+    return args
 
 @asyncio.coroutine
 def client_get(attrs):
@@ -55,6 +78,15 @@ def client_read(client, reader):
     yield from connections[rdchan].put(EOF)
 
 @asyncio.coroutine
+def ws_client_read(client, websocket):
+    wrchan, rdchan = client
+    while True:
+        data = yield from websocket.recv()
+        yield from connections[rdchan].put(data)
+
+    yield from connections[rdchan].put(EOF)
+
+@asyncio.coroutine
 def client_write(client, writer):
     wrchan, rdchan = client
 
@@ -72,6 +104,17 @@ def client_write(client, writer):
     except ConnectionError:
         pass
 
+@asyncio.coroutine
+def ws_client_write(client, websocket):
+    wrchan, rdchan = client
+
+    while True:
+        data = yield from connections[wrchan].get()
+        if data is EOF:
+            break
+
+        yield from websocket.send(data)
+
 def decode_hello(hello):
     parts = hello.decode('utf8').split()
     if not all( '=' in part for part in parts ):
@@ -86,6 +129,8 @@ def main():
     host, port = settings.PROXY_RAW_ADDR
     yield from asyncio.start_server(client_connected,
                                     host=host, port=port)
+    host, port = settings.PROXY_WS_ADDR
+    yield from websockets.serve(ws_client_connected, host, port)
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()

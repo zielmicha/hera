@@ -1,6 +1,7 @@
 CherryPy==3.2.5
 Django==1.6.2
 South==0.8.4
+asyncio==0.4.1
 bottle==0.12.5
 ipython==2.0.0
 pyflakes==0.8.1
@@ -9,3 +10,4 @@ stevedore==0.15
 virtualenv==1.11.4
 virtualenv-clone==0.2.4
 virtualenvwrapper==4.2
+websockets==2.0
