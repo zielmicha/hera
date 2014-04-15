@@ -87,7 +87,7 @@ proc exec(message: PJsonNode): PJsonNode =
     var status: cint
     if waitpid(pid, status, 0) < 0:
       osError(osLastError())
-    response["status"] = %(wExitStatus(status))
+    response["code"] = %(wExitStatus(status))
 
   return response
 
