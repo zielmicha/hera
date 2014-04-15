@@ -26,12 +26,53 @@ def client_connected(reader, writer):
     asyncio.async(client_read(client, reader))
     asyncio.async(client_write(client, writer))
 
+@asyncio.coroutine
+def http_client_connected(reader, writer):
+    uri = (yield from http_read_request(reader))
+    if not uri:
+        http_write_fail(writer)
+
+    prefix = '/stream/'
+    if uri.startswith(prefix):
+        attrs = decode_uri(uri[len(prefix):])
+        client = yield from client_get(attrs)
+        if not client:
+            http_write_fail(writer)
+            return
+        http_write_ok(writer)
+
+        asyncio.async(client_read(client, reader))
+        asyncio.async(client_write(client, writer))
+    else:
+        http_write_fail(writer)
+
+def http_write_fail(writer):
+    writer.write(b'HTTP/1.0 400 Bad request\r\n')
+    writer.write(b'Connection: close\r\n\r\n')
+    writer.write_eof()
+
+def http_write_ok(writer):
+    writer.write(b'HTTP/1.0 200 OK\r\n')
+    writer.write(b'Connection: close\r\n')
+    writer.write(b'Content-type: application/octet-stream\r\n\r\n')
+
+@asyncio.coroutine
+def http_read_request(reader):
+    status = yield from reader.readline()
+    method, uri, version = status.decode('utf8').split(' ', 2)
+    if method != 'POST':
+        return None
+    # ignore headers
+    while True:
+        if not (yield from reader.readline()).strip():
+            break
+    return uri
 
 @asyncio.coroutine
 def ws_client_connected(websocket, uri):
     prefix = '/stream/'
     if uri.startswith(prefix):
-        attrs = decode_ws_uri(uri[len(prefix):])
+        attrs = decode_uri(uri[len(prefix):])
         client = yield from client_get(attrs)
 
         if not client:
@@ -40,7 +81,7 @@ def ws_client_connected(websocket, uri):
         asyncio.async(ws_client_read(client, websocket))
         yield from ws_client_write(client, websocket)
 
-def decode_ws_uri(uri):
+def decode_uri(uri):
     id, _, query = uri.partition('?')
     args = {'id': id}
     for part in query.split('&'):
@@ -82,6 +123,9 @@ def ws_client_read(client, websocket):
     wrchan, rdchan = client
     while True:
         data = yield from websocket.recv()
+        if isinstance(data, str):
+            # If text frame is received, encode it.
+            data = data.encode('utf8')
         yield from connections[rdchan].put(data)
 
     yield from connections[rdchan].put(EOF)
@@ -131,6 +175,9 @@ def main():
                                     host=host, port=port)
     host, port = settings.PROXY_WS_ADDR
     yield from websockets.serve(ws_client_connected, host, port)
+    host, port = settings.PROXY_HTTP_ADDR
+    yield from asyncio.start_server(http_client_connected,
+                                    host=host, port=port)
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
