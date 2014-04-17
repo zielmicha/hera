@@ -1,28 +1,12 @@
-import requests
-import json
-import socket
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-proxy = ('localhost', 10003)
-host = 'http://localhost:8080/'
+import heraclient
 
-resp = requests.post(host + 'sandbox/', data={
-    'owner': 'foouser',
-    'timeout': 8,
-    'memory': 128,
-    'disk': 'new,10M'
-})
-resp.raise_for_status()
-resp = resp.json()
-id = resp['id']
-print(id)
-resp = requests.post(host + 'sandbox/' + id + '/exec', data={
-    'args': json.dumps(["/bin/busybox", "sh", "-c", "read foo; echo hello, $foo"]),
-})
-resp.raise_for_status()
-id = resp.json()['stdout'].split('/')[-1]
+disk = heraclient.new_disk(size='10M')
 
-sock = socket.socket()
-sock.connect(proxy)
-sock.sendall(('id=%s\n' % id).encode())
-sock.sendall(b'Franklin turtle\n')
-print(sock.recv(4096).decode())
+s = heraclient.Sandbox.create(timeout=15, disk=disk)
+proc = s.execute(chroot=False, sync=False, args=['busybox', 'cat'])
+proc.stdin.write('hello\n')
+print(repr(proc.stdout.readline()))

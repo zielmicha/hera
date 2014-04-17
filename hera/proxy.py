@@ -31,6 +31,7 @@ def http_client_connected(reader, writer):
     uri = (yield from http_read_request(reader))
     if not uri:
         http_write_fail(writer)
+        return
 
     prefix = '/stream/'
     if uri.startswith(prefix):
@@ -49,6 +50,7 @@ def http_client_connected(reader, writer):
 def http_write_fail(writer):
     writer.write(b'HTTP/1.0 400 Bad request\r\n')
     writer.write(b'Connection: close\r\n\r\n')
+    writer.write(b'Bad request\r\n')
     writer.write_eof()
 
 def http_write_ok(writer):

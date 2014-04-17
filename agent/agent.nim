@@ -30,7 +30,8 @@ proc mount(target: string, dev: string = nil, fs: string = nil) =
 
 proc setupOptions =
   let table = getKernelCmdline()
-  agentactions.proxyRemoteAddr = table["hera.proxy_remote"]
+  agentactions.proxyWsRemoteAddr = table["hera.proxy_ws_remote"]
+  agentactions.proxyHttpRemoteAddr = table["hera.proxy_http_remote"]
   agentactions.proxyLocalAddr = table["hera.proxy_local"]
   requestedDiskFormat = table["hera.format_disk"] == "true"
 

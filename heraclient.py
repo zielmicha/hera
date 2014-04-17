@@ -1,5 +1,6 @@
 import requests
 import json
+import io
 
 URL = 'http://localhost:8080/'
 
@@ -29,23 +30,23 @@ class Sandbox(object):
         resp = self.action('create_template', name=name)
         return Template(resp['id'])
 
-    def execute(self, sync=False, chroot=True, args=None, command=None,
-                stderr_to_stdout=False,):
-        if command:
-            assert isinstance(command, str)
-            assert not args
-        elif args:
-            assert all( isinstance(param, str) for param in args )
-        else:
-            raise ValueError('expected either `command` or `args` argument')
+    def execute(self, args, sync=False, chroot=True, shell=False,
+                stderr_to_stdout=False):
+        '''
+        Execute process in sandbox.
+        '''
         kwargs = dict(sync='true' if sync else 'false',
                       chroot=chroot)
-        if args:
+        if shell:
+            assert isinstance(args, str)
+            kwargs['command'] = args
+        else:
+            assert all( isinstance(param, str) for param in args )
             kwargs['args'] = json.dumps(args)
-        if command:
-            kwargs['command'] = command
+
         if stderr_to_stdout:
             kwargs['stderr'] = 'stdout'
+
         resp = self.action('exec', **kwargs)
         return Process(resp, sync=sync)
 
@@ -58,6 +59,14 @@ class Process(object):
     def __init__(self, resp, sync):
         self.resp = resp
         self.sync = sync
+        if not self.sync:
+            self.stdin = Stream(resp['stdin'])
+            if resp['stdin'] == resp['stdout']:
+                self.stdout = self.stdin
+            else:
+                self.stdout = Stream(resp['stdout'])
+            if 'stderr' in resp:
+                self.stderr = Stream(resp['stderr'])
 
     def read_stdout(self):
         return self._read_stream('stdout')
@@ -90,3 +99,46 @@ def new_disk(size):
 
 class ApiError(Exception):
     pass
+
+# Websocket streams
+
+class _StreamBase(io.RawIOBase):
+    def __init__(self, urls):
+        self.urls = urls
+
+try:
+    import websocket
+except ImportError as err:
+    import_error = err
+    class Stream(_StreamBase):
+        def read(self, n=None):
+            raise import_error
+
+        def write(self, data):
+            raise import_error
+else:
+    class Stream(_StreamBase):
+        def __init__(self, urls):
+            _StreamBase.__init__(self, urls)
+            self._websocket_conn = None
+
+        @property
+        def websocket_conn(self):
+            if not self._websocket_conn:
+                url = self.urls['websocket']
+                self._websocket_conn = websocket.create_connection(url)
+            return self._websocket_conn
+
+        def read(self, n=2**32):
+            buff = []
+            length_left = n
+            while length_left > 0:
+                data = self.websocket_conn.recv()
+                if not data:
+                    break
+                buff.append(data)
+                length_left -= len(buff)
+            return ''.join(buff)
+
+        def write(self, data):
+            self.websocket_conn.send(data)

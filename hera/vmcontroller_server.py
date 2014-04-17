@@ -82,7 +82,8 @@ class Server:
             # use host address inside Qemu user network
             proxy_local = '10.0.2.2', proxy_local[1]
         cmdline = 'hera.proxy_local=%s:%d' % proxy_local
-        cmdline += ' hera.proxy_remote=' + settings.PROXY_HTTP
+        cmdline += ' hera.proxy_ws_remote=' + settings.PROXY_WS
+        cmdline += ' hera.proxy_http_remote=' + settings.PROXY_HTTP
         if self.disk.new:
             cmdline += ' hera.format_disk=true'
         return cmdline

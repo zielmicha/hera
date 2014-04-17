@@ -2,7 +2,8 @@ import json, strtabs, streams, posix, os, sockets, strutils
 import jsontool, proxyclient, agentio, process, tools
 
 var
-  proxyRemoteAddr*: string
+  proxyWsRemoteAddr*: string
+  proxyHttpRemoteAddr*: string
   proxyLocalAddr*: string
 
 proc setupEnviron(message: PJsonNode): PStringTable =
@@ -20,7 +21,7 @@ proc makeArgs(message: PJsonNode): seq[string] =
     args = @["/bin/sh", "-c", command]
   return args
 
-type TPipe = Tuple[procFd: TFileHandle, finish: proc(): string]
+type TPipe = Tuple[procFd: TFileHandle, finish: proc(): PJsonNode]
 
 proc makePipeSync(read: bool): TPipe =
   var fds: array[0..1, cint]
@@ -29,13 +30,13 @@ proc makePipeSync(read: bool): TPipe =
   if not read:
     swap(fds[0], fds[1])
 
-  proc finish(): string =
+  proc finish(): PJsonNode =
     if read:
-      return nil
+      return newJNull()
     else:
       let data = fds[1].readAll
       discard fds[1].close
-      return data
+      return %data
 
   return (fds[0], finish)
 
@@ -43,15 +44,17 @@ proc makePipesSync(): auto =
   (makePipeSync(read=true), makePipeSync(read=false), makePipeSync(read=false))
 
 proc makePipeNorm(): TPipe =
-  let url = proxyRemoteAddr & "stream/"
+  let url = "stream/"
   let id = randomIdent()
   var sock: TSocket = socket()
   let parsedAddr = proxyLocalAddr.split(':')
   sock.connect(parsedAddr[0], TPort(parsedAddr[1].parseInt))
   sock.send("id=$1 role=server\n" % id)
 
-  proc finish(): string =
-    return url & id
+  proc finish(): PJsonNode =
+    return %{
+       "websocket": %(proxyWsRemoteAddr & url & id),
+       "http": %(proxyHttpRemoteAddr & url & id)}
 
   return (TFileHandle(sock.getFd()), finish)
 
@@ -79,10 +82,10 @@ proc exec(message: PJsonNode): PJsonNode =
     discard stderr.procFd.close
 
   var response = %{"status": %"ok"}
-  response["stdin"] = nullsafeJson(stdin.finish())
-  response["stdout"] = nullsafeJson(stdout.finish())
+  response["stdin"] = stdin.finish()
+  response["stdout"] = stdout.finish()
   if not stderrToStdout:
-    response["stderr"] = nullsafeJson(stderr.finish())
+    response["stderr"] = stderr.finish()
   if doSync:
     var status: cint
     if waitpid(pid, status, 0) < 0:
