@@ -1,8 +1,8 @@
-PATH:=$(PWD)/buildroot/output/host/usr/bin/:$(PATH)
+PATH:=$(shell pwd)/buildroot/output/host/usr/bin/:$(PATH)
 
 all: busybox kernel buildroot
 
-foo:
+bash:
 	bash
 
 busybox: buildroot

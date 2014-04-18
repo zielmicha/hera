@@ -1,9 +1,9 @@
-CCPATH:=$(PWD)/../deps/buildroot/output/host/usr/bin/
-CCPREFIX=$(CCPATH)x86_64-buildroot-linux-uclibc-
+CCPATH:=$(shell pwd)/../deps/buildroot/output/host/usr/bin/
+CCPREFIX:=$(CCPATH)x86_64-buildroot-linux-uclibc-
 PATH:=$(CCPATH):$(PATH)
-NIMRODSOURCES=$(wildcard *.nim)
-NIMRODFLAGS=-d:useFork --passC:-I$(PWD)/fakelibs
-CC=x86_64-buildroot-linux-uclibc-gcc
+NIMRODSOURCES:=$(wildcard *.nim)
+NIMRODFLAGS:=-d:useFork --passC:-I$(shell pwd)/fakelibs
+CC:=x86_64-buildroot-linux-uclibc-gcc
 
 all: build/ramdisk
 
@@ -32,7 +32,7 @@ build/agent: build/libagent.a
 	$(CC) fakelibs/fakedl.c build/libagent.a -static -o build/agent
 
 build/libagent.a: build/ $(NIMRODSOURCES)
-	PATH=$(PWD)/build/symlinks:$(PATH) \
+	PATH=$(shell pwd)/build/symlinks:$(PATH) \
 	  nimrod '--nimcache:build/nimcache' '--verbosity:0' '--app:staticlib' \
 	  '--parallelBuild:1' '--out:build/libagent.a' $(NIMRODFLAGS)  \
 	  compile agent
