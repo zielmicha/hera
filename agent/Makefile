@@ -31,7 +31,7 @@ build/kernel:
 build/agent: build/libagent.a
 	$(CC) fakelibs/fakedl.c build/libagent.a -static -o build/agent
 
-build/libagent.a: build/ $(NIMRODSOURCES)
+build/libagent.a: build/symlinks build/ $(NIMRODSOURCES)
 	PATH=$(shell pwd)/build/symlinks:$(PATH) \
 	  nimrod '--nimcache:build/nimcache' '--verbosity:0' '--app:staticlib' \
 	  '--parallelBuild:1' '--out:build/libagent.a' $(NIMRODFLAGS)  \

@@ -7,8 +7,12 @@ venv/bin/activate:
 	. venv/bin/activate; pip install -Ur requirements.txt
 	touch venv/bin/activate
 
-deps:
+deps: submodules
 	make -C deps
+
+submodules:
+	git submodule init
+	git submodule update
 
 agent: deps
 	make -C agent
