@@ -5,7 +5,7 @@ NIMRODSOURCES:=$(wildcard *.nim)
 NIMRODFLAGS:=-d:useFork --passC:-I$(shell pwd)/fakelibs
 CC:=x86_64-buildroot-linux-uclibc-gcc
 
-all: build/ramdisk
+all: build/ramdisk build/kernel
 
 bash:
 	bash

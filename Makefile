@@ -10,6 +10,10 @@ venv/bin/activate:
 deps: submodules
 	make -C deps
 
+syncdb: virtualenv
+	. venv/bin/activate && ./manage.py syncdb
+	. venv/bin/activate && ./manage.py migrate
+
 submodules:
 	git submodule init
 	git submodule update
