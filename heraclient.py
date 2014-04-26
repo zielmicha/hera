@@ -43,7 +43,7 @@ class Sandbox(object):
         Execute process in sandbox.
         '''
         kwargs = dict(sync='true' if sync else 'false',
-                      chroot=chroot)
+                      chroot='true' if chroot else 'false')
         if shell:
             assert isinstance(args, str)
             kwargs['command'] = args

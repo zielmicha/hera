@@ -8,7 +8,18 @@ proc checkedFork*: TPid =
     osError(osLastError())
   return res
 
-proc startProcess*(args: seq[string], files: openarray[TFileHandle]): TPid =
+proc cchroot(path: cstring): cint {.importc: "chroot", header: "<unistd.h>".}
+
+proc checkedChroot(path: string) =
+  if cchroot(path) < 0:
+    osError(osLastError())
+
+proc write*(fd: TFileHandle, data: string) =
+  if write(fd, data.cstring, data.len) < 0:
+    osError(osLastError())
+
+proc startProcess*(args: seq[string], files: openarray[TFileHandle],
+                   chroot: string=nil): TPid =
   let res = checkedFork()
   if res == 0:
     # Close stdio
@@ -20,10 +31,14 @@ proc startProcess*(args: seq[string], files: openarray[TFileHandle]): TPid =
     # Close old FDs
     for i in 3..1024:
       discard close(cint(i))
+    # Chroot
+    if chroot != nil:
+      checkedChroot(chroot)
     # Exec
     let sysArgs = allocCStringArray(args)
     discard execvp(sysArgs[0], sysArgs)
     # error
+    files[2].write("Couldn't spawn process: " & osErrorMsg(osLastError()) & "\n")
     exitnow(13)
 
   return TPid(res)
@@ -36,10 +51,6 @@ proc waitpid*(pid: TPid, options: cint=0): cint =
   if waitpid(pid, status, options) < 0:
     osError(osLastError())
   return status
-
-proc write*(fd: TFileHandle, data: string) =
-  if write(fd, data.cstring, data.len) < 0:
-    osError(osLastError())
 
 template forkBlock*(b: expr) =
   if checkedFork() == 0:

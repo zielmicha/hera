@@ -11,7 +11,6 @@ proc setupEnviron(message: PJsonNode): PStringTable =
 
 proc makeArgs(message: PJsonNode): seq[string] =
   let command = message.getString("command")
-  let useChroot = message.getBool("chroot", true)
 
   var args: seq[string] = @[]
   if command == nil:
@@ -68,6 +67,7 @@ proc makePipesNorm(stderrToStdout: bool): auto =
 proc exec(message: PJsonNode): PJsonNode =
   let stderrToStdout = message.getString("stderr") == "stdout"
   let doSync = message.getBool("sync", false)
+  let useChroot = message.getBool("chroot", true)
 
   let args = makeArgs(message)
   var (stdin, stdout, stderr) = if doSync: makePipesSync()
@@ -75,7 +75,9 @@ proc exec(message: PJsonNode): PJsonNode =
   if stderrToStdout:
     stderr = stdout
 
-  let pid = startProcess(args, files=[stdin.procFd, stdout.procFd, stderr.procFd])
+  let pid = startProcess(args,
+                         files=[stdin.procFd, stdout.procFd, stderr.procFd],
+                         chroot=if useChroot: "/mnt" else: nil)
 
   discard stdin.procFd.close
   discard stdout.procFd.close

@@ -12,7 +12,7 @@ import heraclient
 disk = heraclient.new_disk(size='10G')
 
 print('Creating VM')
-s = heraclient.Sandbox.create(timeout=300, disk=disk)
+s = heraclient.Sandbox.create(timeout=100, disk=disk)
 print('Waiting for VM')
 s.wait()
 print('Unpacking')
@@ -22,7 +22,8 @@ s.unpack(
     compress_type='z',
     archive=ns.image)
 print('OK')
-print(s.execute(['busybox', 'ls', '/mnt'], chroot=False).read_stdout())
 
+print(s.execute(['busybox', 'ls', '/mnt'], chroot=False).read_stdout())
+print(s.execute(['ls', '/']).read_stdout())
 #template = s.save_as_template()
 #print('Saved as template with id:', template.id)

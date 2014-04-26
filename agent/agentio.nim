@@ -6,12 +6,6 @@ var
 const
   busyboxPath = "/bin/busybox"
 
-proc cchroot(path: cstring): cint {.importc: "chroot".}
-
-proc chroot*(path: string) =
-  if cchroot(path) < 0:
-    osError(osLastError())
-
 proc busybox*(cmd: seq[string]) =
   let p = startProcess(busyboxPath, args=cmd[0..cmd.len-1], options={poParentStreams})
   let code = p.waitForExit()
