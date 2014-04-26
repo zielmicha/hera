@@ -153,6 +153,8 @@ proc processMessage*(message: PJsonNode): PJsonNode =
       return %{"status": %"HaltFailed"}
     of "synthetic_error":
       raise newException(E_Synch, "synthetic_error")
+    of "wait":
+      return %{"status": %"ok"}
     else:
       return %{"status": %"UnknownMessageType"}
 

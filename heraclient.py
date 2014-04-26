@@ -63,6 +63,9 @@ class Sandbox(object):
         result = Stream(resp['output']).download()
         response_raise(result)
 
+    def wait(self):
+        self.action('wait')
+
     def action(self, type, **args):
         resp = requests.post(URL + 'sandbox/%s/%s' % (self.id, type), data=args)
         response_raise(resp)
@@ -115,7 +118,7 @@ class ApiError(Exception):
 
 # Websocket streams
 
-class _StreamBase(io.RawIOBase):
+class _StreamBase(object):
     def __init__(self, urls):
         self.urls = urls
         self._websocket_conn = None
@@ -172,6 +175,52 @@ class _StreamBase(io.RawIOBase):
         host, _, path = rest.partition('/')
         return clazz(host), '/' + path
 
+class _BufferedInputFileMixin(object):
+    def __init__(self):
+        self.__buff = ''
+
+    def read_some(self):
+        if not self.__buff:
+            data = self._unbuffered_read()
+            return data
+        else:
+            buff = self.__buff
+            self.__buff = ''
+            return buff
+
+    def read(self, n=2**64):
+        buff = []
+        length_left = n
+        while length_left > 0:
+            data = self.read_some()
+            if not data:
+                break
+            buff.append(data)
+            length_left -= len(data)
+        data = ''.join(buff)
+        leftover = data[n:]
+        if leftover:
+            self.unread(leftover)
+        return data[:n]
+
+    def unread(self, data):
+        if self.__buff:
+            raise IOError('unread buffer used')
+        self.__buff = data
+
+    def readline(self):
+        data = []
+        while True:
+            frag = self.read_some()
+            if not frag:
+                break
+            index = frag.find(b'\n')
+            if index != -1:
+                data.append(frag[:index + 1])
+                self.unread(frag[index + 1:])
+                break
+        return b''.join(data)
+
 try:
     import websocket
 except (ImportError, SyntaxError) as err:
@@ -183,9 +232,10 @@ except (ImportError, SyntaxError) as err:
         def write(self, data):
             raise import_error
 else:
-    class Stream(_StreamBase):
+    class Stream(_StreamBase, _BufferedInputFileMixin):
         def __init__(self, urls):
             _StreamBase.__init__(self, urls)
+            _BufferedInputFileMixin.__init__(self)
 
         @property
         def websocket_conn(self):
@@ -196,16 +246,8 @@ else:
                 self._websocket_conn = websocket.create_connection(url)
             return self._websocket_conn
 
-        def read(self, n=2**64):
-            buff = []
-            length_left = n
-            while length_left > 0:
-                data = self.websocket_conn.recv()
-                if not data:
-                    break
-                buff.append(data)
-                length_left -= len(buff)
-            return ''.join(buff)
+        def _unbuffered_read(self):
+            return self.websocket_conn.recv()
 
         def write(self, data):
             self.websocket_conn.send(data)
