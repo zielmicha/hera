@@ -1,8 +1,12 @@
 import requests
-import httplib
 import json
 import io
 import os
+
+try:
+    import httplib
+except ImportError:
+    import http.client as httplib
 
 URL = 'http://localhost:8080/'
 
@@ -107,10 +111,63 @@ class ApiError(Exception):
 class _StreamBase(io.RawIOBase):
     def __init__(self, urls):
         self.urls = urls
+        self._websocket_conn = None
+        self._closed = False
+
+    def download(self):
+        return self._upload(None, None)
+
+    def upload(self, data):
+        return self._upload(io.BytesIO(data), len(data))
+
+    def upload_file(self, file_obj_or_name, size=None):
+        if isinstance(file_obj_or_name, str):
+            if not size:
+                size = os.path.getsize(file_obj_or_name)
+            fileobj = open(file_obj_or_name, 'r')
+        else:
+            fileobj = file_obj_or_name
+            assert size is not None
+
+        return self._upload(fileobj, size)
+
+    def _upload(self, stream, size):
+        if self._websocket_conn:
+            raise IOError('Websocket connection alread opened - cannot upload via HTTP')
+        self._closed = True
+        conn, path = self._make_connection(self.urls['http'])
+        if size is None:
+            conn.putrequest('GET', path)
+        else:
+            conn.putrequest('POST', path)
+            conn.putheader('Content-Length', size)
+        conn.endheaders()
+        if size is not None:
+            while size > 0:
+                data = stream.read(min(size, 4096))
+                if not data:
+                    raise IOError('incomplete read from upload source')
+                conn.send(data)
+                size -= len(data)
+        resp = conn.getresponse()
+        if resp.status != 200:
+            raise ApiError('call to proxy returned code %d' % resp.status)
+        return resp
+
+    def _make_connection(self, url):
+        proto, rest = url.split('://', 1)
+        if proto == 'http':
+            clazz = httplib.HTTPConnection
+        elif proto == 'https':
+            clazz = httplib.HTTPSConnection
+        else:
+            raise ValueError('unknown protocol %r' %  proto)
+        host, _, path = rest.partition('/')
+        return clazz(host), '/' + path
 
 try:
     import websocket
-except ImportError as err:
+except (ImportError, SyntaxError) as err:
     import_error = err
     class Stream(_StreamBase):
         def read(self, n=None):
@@ -122,8 +179,6 @@ else:
     class Stream(_StreamBase):
         def __init__(self, urls):
             _StreamBase.__init__(self, urls)
-            self._websocket_conn = None
-            self._closed = False
 
         @property
         def websocket_conn(self):
@@ -134,48 +189,7 @@ else:
                 self._websocket_conn = websocket.create_connection(url)
             return self._websocket_conn
 
-        def upload(self, data):
-            return self._upload(io.BytesIO(data), len(data))
-
-        def upload_file(self, file_obj_or_name, size=None):
-            if isinstance(file_obj_or_name, str):
-                if not size:
-                    size = os.path.getsize(file_obj_or_name)
-                fileobj = open(file_obj_or_name, 'r')
-            else:
-                fileobj = file_obj_or_name
-                assert size is not None
-
-            return self._upload(fileobj, size)
-
-        def _upload(self, stream, size):
-            if self._websocket_conn:
-                raise IOError('Websocket connection alread opened - cannot upload via HTTP')
-            self._closed = True
-            conn, path = self._make_connection(self.urls['http'])
-            conn.putrequest('POST', path)
-            conn.putheader('Content-Length', size)
-            conn.endheaders()
-            while size > 0:
-                data = stream.read(min(size, 4096))
-                if not data:
-                    raise IOError('incomplete read from upload source')
-                conn.send(data)
-                size -= len(data)
-            return conn.getresponse()
-
-        def _make_connection(self, url):
-            proto, rest = url.split('://', 1)
-            if proto == 'http':
-                clazz = httplib.HTTPConnection
-            elif proto == 'https':
-                clazz = httplib.HTTPSConnection
-            else:
-                raise ValueError('unknown protocol %r' %  proto)
-            host, _, path = rest.partition('/')
-            return clazz(host), '/' + path
-
-        def read(self, n=2**32):
+        def read(self, n=2**64):
             buff = []
             length_left = n
             while length_left > 0:

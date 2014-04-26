@@ -15,9 +15,10 @@ class DerivativeResource(models.Model):
     closed_at = models.DateTimeField(null=True)
 
     def close(self):
-        if not self.closed_at:
-            self.closed_at = datetime.datetime.now()
-        self.put()
+        if self.id:
+            if not self.closed_at:
+                self.closed_at = datetime.datetime.now()
+            self.save()
 
 class ResourceRefreshed(models.Model):
     resource = models.ForeignKey(DerivativeResource, related_name='refreshes')

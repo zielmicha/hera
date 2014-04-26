@@ -59,10 +59,11 @@ proc makePipeNorm(): TPipe =
   return (TFileHandle(sock.getFd()), finish)
 
 proc makePipesNorm(stderrToStdout: bool): auto =
-  let stdPipe = makePipeNorm()
+  let stdinPipe = makePipeNorm()
+  let stdoutPipe = makePipeNorm()
   let errPipe = if not stderrToStdout: makePipeNorm()
-                else: stdPipe # whatever
-  return (stdPipe, stdPipe, errPipe)
+                else: stdoutPipe # whatever
+  return (stdinPipe, stdoutPipe, errPipe)
 
 proc exec(message: PJsonNode): PJsonNode =
   let stderrToStdout = message.getString("stderr") == "stdout"
