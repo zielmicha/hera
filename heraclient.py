@@ -2,6 +2,7 @@ import requests
 import json
 import io
 import os
+import socket
 
 try:
     import httplib
@@ -56,12 +57,22 @@ class Sandbox(object):
         resp = self.action('exec', **kwargs)
         return Process(resp, sync=sync)
 
-    def unpack(self, archive_type, archive, archive_size=None, target='/'):
-        resp = self.action('unpack', target=target, archive_type=archive_type)
+    def unpack(self, archive_type, archive, archive_size=None, compress_type='', target='/'):
+        resp = self.action('unpack', target=target, archive_type=archive_type,
+                           compress_type=compress_type)
         input = Stream(resp['input'])
-        input.upload_file(archive, archive_size)
+        error = None
+        try:
+            input.upload_file(archive, archive_size)
+        except socket.error as err:
+            # For "Connection reset by peer" error message from 'output' will be
+            # more useful.
+            if err.errno != 104:
+                raise
+            error = err
         result = Stream(resp['output']).download()
         response_raise(result)
+        if error: raise
 
     def wait(self):
         self.action('wait')

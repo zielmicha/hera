@@ -107,12 +107,17 @@ proc halt =
 
 proc unpack(message: PJsonNode): PJsonNode =
   let kind = message.getString("archive_type")
+  var compress = message.getString("compress_type")
+  if compress == nil:
+    compress = ""
+  if compress notin @["z", "J", "j", "a", ""]:
+    return %{"status": %"InvalidCompressionFlag"}
   var target = message.getString("target")
   if target == nil:
     target = "/"
   var cmd: seq[string]
   if kind == "tar":
-    cmd = @["/bin/busybox", "tar", "-x", "-C", "/mnt/" & target]
+    cmd = @["/bin/busybox", "tar", "-" & compress & "x", "-C", "/mnt/" & target]
   elif kind == "zip":
     let id = randomIdent()
     cmd = @["/bin/busybox", "sh", "-c",

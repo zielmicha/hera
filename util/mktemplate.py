@@ -19,8 +19,10 @@ print('Unpacking')
 s.unpack(
     target='/',
     archive_type='tar',
+    compress_type='z',
     archive=ns.image)
 print('OK')
+print(s.execute(['busybox', 'ls', '/mnt'], chroot=False).read_stdout())
 
 #template = s.save_as_template()
 #print('Saved as template with id:', template.id)
