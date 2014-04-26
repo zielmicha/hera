@@ -42,7 +42,8 @@ def http_client_connected(reader, writer):
             return
         http_write_ok(writer)
 
-        asyncio.async(client_read(client, reader, max_length=content_length))
+        if content_length is not None:
+            asyncio.async(client_read(client, reader, max_length=content_length))
         asyncio.async(client_write(client, writer))
     else:
         http_write_fail(writer)
@@ -67,7 +68,7 @@ def http_read_request(reader):
     # ignore headers
     headers = yield from http_read_headers(reader)
     if method == 'GET':
-        length = 0
+        length = None
     else:
         length = int(headers[b'content-length'].strip())
     return uri, length
@@ -123,7 +124,6 @@ def client_get(attrs):
 def client_read(client, reader, max_length=2**64):
     wrchan, rdchan = client
     length_left = max_length
-    print('client_read', length_left)
     while length_left > 0:
         try:
             data = yield from reader.read(4096)
@@ -132,12 +132,8 @@ def client_read(client, reader, max_length=2**64):
         if not data:
             break
         length_left -= len(data)
-        print('read', data, 'left', length_left)
         yield from connections[rdchan].put(data)
-    else:
-        print('else hit with', length_left)
 
-    print('finish', length_left)
     yield from connections[rdchan].put(EOF)
 
 @asyncio.coroutine
@@ -159,7 +155,6 @@ def client_write(client, writer):
     try:
         while True:
             data = yield from connections[wrchan].get()
-            print(writer, 'write', data)
             if data is EOF or data is None:
                 writer.close()
                 yield from writer.drain()

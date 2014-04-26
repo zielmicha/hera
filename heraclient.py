@@ -56,6 +56,13 @@ class Sandbox(object):
         resp = self.action('exec', **kwargs)
         return Process(resp, sync=sync)
 
+    def unpack(self, archive_type, archive, archive_size=None, target='/'):
+        resp = self.action('unpack', target=target, archive_type=archive_type)
+        input = Stream(resp['input'])
+        input.upload_file(archive, archive_size)
+        result = Stream(resp['output']).download()
+        response_raise(result)
+
     def action(self, type, **args):
         resp = requests.post(URL + 'sandbox/%s/%s' % (self.id, type), data=args)
         response_raise(resp)
@@ -84,7 +91,7 @@ class Process(object):
         if self.sync:
             return self.resp[name]
         else:
-            raise NotImplementedError()
+            return getattr(self, name).download().content
 
 class Template(object):
     def __init__(self, id):
@@ -115,7 +122,7 @@ class _StreamBase(io.RawIOBase):
         self._closed = False
 
     def download(self):
-        return self._upload(None, None)
+        return requests.get(self.urls['http'], stream=True)
 
     def upload(self, data):
         return self._upload(io.BytesIO(data), len(data))

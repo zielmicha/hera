@@ -2,10 +2,14 @@ import posix, os
 
 proc exitnow(code: cint): void {.importc: "exit".}
 
-proc startProcess*(args: seq[string], files: openarray[TFileHandle]): TPid =
+proc checkedFork*: TPid =
   let res = fork()
   if res < 0:
     osError(osLastError())
+  return res
+
+proc startProcess*(args: seq[string], files: openarray[TFileHandle]): TPid =
+  let res = checkedFork()
   if res == 0:
     # Close stdio
     for i in 0..2:
@@ -26,3 +30,18 @@ proc startProcess*(args: seq[string], files: openarray[TFileHandle]): TPid =
 
 proc wExitStatus*(status: cint): int =
   return (int(status) and 0xff00) shr 8
+
+proc waitpid*(pid: TPid, options: cint=0): cint =
+  var status: cint
+  if waitpid(pid, status, options) < 0:
+    osError(osLastError())
+  return status
+
+proc write*(fd: TFileHandle, data: string) =
+  if write(fd, data.cstring, data.len) < 0:
+    osError(osLastError())
+
+template forkBlock*(b: expr) =
+  if checkedFork() == 0:
+    b()
+    exitnow(1)

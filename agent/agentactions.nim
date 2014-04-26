@@ -1,4 +1,4 @@
-import json, strtabs, streams, posix, os, sockets, strutils
+import json, strtabs, streams, posix, os, sockets, strutils, osproc
 import jsontool, proxyclient, agentio, process, tools
 
 var
@@ -88,9 +88,7 @@ proc exec(message: PJsonNode): PJsonNode =
   if not stderrToStdout:
     response["stderr"] = stderr.finish()
   if doSync:
-    var status: cint
-    if waitpid(pid, status, 0) < 0:
-      osError(osLastError())
+    let status = waitpid(pid)
     response["code"] = %(wExitStatus(status))
 
   return response
@@ -107,11 +105,47 @@ proc prepareForDeath: auto =
 proc halt =
   writeFile("/proc/sysrq-trigger", "o\n")
 
+proc unpack(message: PJsonNode): PJsonNode =
+  let kind = message.getString("archive_type")
+  var target = message.getString("target")
+  if target == nil:
+    target = "/"
+  var cmd: seq[string]
+  if kind == "tar":
+    cmd = @["/bin/busybox", "tar", "-x", "-C", "/mnt/" & target]
+  elif kind == "zip":
+    let id = randomIdent()
+    cmd = @["/bin/busybox", "sh", "-c",
+      "busybox cat > /mnt/$1; busybox unzip /mnt/$1 -qd /mnt/$2; busybox rm /mnt/$1" % [
+         id, quoteShell(target)]]
+  else:
+    log("bad archive type: $1" % kind)
+    return %{"status": %"UnknownArchiveType"}
+
+  let stdin = makePipeNorm()
+  let stderr = makePipeNorm()
+
+  forkBlock:
+    let pid = startProcess(cmd, files=[stdin.procFd, 1, 1])
+    let status = waitpid(pid)
+    log("wait returned $1" % [$status.wExitStatus])
+    if wExitStatus(status) != 0:
+      stderr.procFd.write($(%{"status": %"UnpackFailed"}))
+    else:
+      stderr.procFd.write($(%{"status": %"ok"}))
+    log("written")
+
+  discard stderr.procFd.close
+  discard stdin.procFd.close
+  return %{"status": %"ok", "input": stdin.finish(), "output": stderr.finish()}
+
 proc processMessage*(message: PJsonNode): PJsonNode =
   let msgType = message["type"].str
   case msgType:
     of "exec":
       return exec(message)
+    of "unpack":
+      return unpack(message)
     of "prepare_for_death":
       return prepareForDeath()
     of "halt":
