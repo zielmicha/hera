@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+import time
 import argparse
 import heraclient
 
@@ -15,9 +16,12 @@ if args.template:
 else:
     disk = heraclient.new_disk(size='10M')
 
-import heraclient
+start = time.time()
+
 s = heraclient.Sandbox.create(timeout=15, disk=disk)
-proc = s.execute(chroot=False, sync=True, args=['busybox', 'cat', '/proc/cmdline'])
-print('cmdline', repr(proc.read_stdout()))
+proc = s.execute(chroot=False, sync=False, args=['busybox', 'cat', '/proc/cmdline'])
+print('cmdline: %r' % (proc.read_stdout()))
 proc = s.execute(chroot=False, sync=True, args=['busybox', 'ls', '/mnt'])
-print('ls /mnt:', repr(proc.read_stdout()))
+print('ls /mnt: %r' % (proc.read_stdout()))
+
+print('Took %.1f s' % (time.time() - start))

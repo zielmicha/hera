@@ -40,7 +40,7 @@ class VM:
             '-enable-kvm',
             '-kernel', 'agent/build/kernel',
             '-initrd', 'agent/build/ramdisk',
-            '-append', 'quiet ip=dhcp ' + cmdline,
+            '-append', 'ip=dhcp ' + cmdline,
             '-nographic',
 ## Disk
             '-drive', 'file=%s,if=virtio' % disk,
@@ -101,13 +101,16 @@ class VM:
         return sock, sock.makefile('rw')
 
     def _process_response(self, resp):
-        print('[%f]' % (time.time() - self.init_time), resp)
+        self.log(resp)
         if 'outofband' in resp:
             oob_type = resp['outofband']
             if oob_type == 'heartbeat':
                 self.heartbeat_callback()
         else:
             self.read_queue.put(resp)
+
+    def log(self, txt):
+        print('[%f]' % (time.time() - self.init_time), txt)
 
     def _writer(self, file):
         while True:

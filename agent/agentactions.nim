@@ -65,6 +65,7 @@ proc makePipesNorm(stderrToStdout: bool): auto =
   return (stdinPipe, stdoutPipe, errPipe)
 
 proc exec(message: PJsonNode): PJsonNode =
+  log("exec begin")
   let stderrToStdout = message.getString("stderr") == "stdout"
   let doSync = message.getBool("sync", false)
   let useChroot = message.getBool("chroot", true)

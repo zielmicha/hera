@@ -63,13 +63,14 @@ class Server:
             accounting.derivative_resource_used(self.res_id, user_type='vm',
                                                 user_id=self.vm_id)
 
-        self.disk = disks.clone_or_create_disk(self.stats['disk'],
-                                               owner=self.owner,
-                                               timeout=self.stats['timeout'])
-
         self.vm = vmcontroller.VM(
             heartbeat_callback=heartbeat_callback,
             close_callback=self.after_close)
+
+        self.disk = disks.clone_or_create_disk(self.stats['disk'],
+                                               owner=self.owner,
+                                               timeout=self.stats['timeout'])
+        self.vm.log('Disk ready')
 
         self.vm.start(
             memory=self.stats['memory'],
