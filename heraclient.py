@@ -77,6 +77,9 @@ class Sandbox(object):
     def wait(self):
         self.action('wait')
 
+    def kill(self):
+        self.action('kill')
+
     def action(self, type, **args):
         resp = requests.post(URL + 'sandbox/%s/%s' % (self.id, type), data=args)
         response_raise(resp)
@@ -242,6 +245,9 @@ except (ImportError, SyntaxError) as err:
 
         def write(self, data):
             raise import_error
+
+        def close(self, data):
+            raise import_error
 else:
     class Stream(_StreamBase, _BufferedInputFileMixin):
         def __init__(self, urls):
@@ -262,3 +268,8 @@ else:
 
         def write(self, data):
             self.websocket_conn.send(data)
+
+        def close(self):
+            if not self._closed:
+                self.websocket_conn.close()
+                self._closed = True

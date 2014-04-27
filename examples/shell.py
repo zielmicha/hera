@@ -1,54 +1,41 @@
-import requests
-import json
-import socket
-import select
+import sys
 import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+import heraclient
+import argparse
+import threading
 import atexit
+import termios
+import tty
 
-proxy = ('localhost', 10003)
-host = 'http://localhost:8080/'
+parser = argparse.ArgumentParser(description='Run shell.')
+parser.add_argument('template',
+                   help='use template')
+args = parser.parse_args()
 
-resp = requests.post(host + 'sandbox/', data={
-    'owner': 'foouser',
-    'timeout': 120,
-    'memory': 128,
-    'disk': os.environ.get('template', 'new,5G'),
-})
-resp.raise_for_status()
-resp = resp.json()
-vm_id = resp['id']
+s = heraclient.Sandbox.create(timeout=40, disk=args.template)
+proc = s.execute(args=['bash', '-i'], stderr_to_stdout=True)
 
-def kill():
-    resp = requests.post(host + 'sandbox/' + vm_id + '/kill')
-    print('killed:', resp.json())
+def rev():
+    while True:
+        ch = sys.stdin.read(1)
+        if not ch:
+            proc.stdin.close()
+            return
+        proc.stdin.write(ch)
 
-atexit.register(kill)
+t = threading.Thread(target=rev)
+t.daemon = True
+t.start()
 
-resp = requests.post(host + 'sandbox/' + vm_id + '/exec', data={
-    'args': json.dumps(["/bin/busybox", "sh", "-i"]),
-})
-resp.raise_for_status()
-id = resp.json()['stdout'].split('/')[-1]
-
-sock = socket.socket()
-sock.connect(proxy)
-sock.sendall(('id=%s\n' % id).encode())
-file = sock.makefile('rwb', 0)
-
-infile = os.fdopen(0, 'rb', 0)
-outfile = os.fdopen(1, 'wb', 0)
-
-mapping = {
-    infile: file,
-    file: outfile
-}
+old = termios.tcgetattr(0)
+atexit.register(termios.tcsetattr, 0, termios.TCSADRAIN, old)
+tty.setcbreak(0)
+atexit.register(s.kill)
 
 while True:
-    R, W, E = select.select([file, infile],
-                            [],
-                            [file, infile])
-    if E:
-        break
-
-    for r in R:
-        mapping[r].write(r.read(1))
+    data = proc.stdout.read_some()
+    if not data: break
+    sys.stdout.write(data)
+    sys.stdout.flush()
