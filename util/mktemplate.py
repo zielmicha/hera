@@ -6,6 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('image', help='Source tgz (created by ./mkdebian.sh).')
+parser.add_argument('target', help='Target name.')
 ns = parser.parse_args()
 
 import heraclient
@@ -25,5 +26,5 @@ print('OK')
 
 print(s.execute(['busybox', 'ls', '/mnt'], chroot=False).read_stdout())
 print(s.execute(['ls', '/']).read_stdout())
-#template = s.save_as_template()
-#print('Saved as template with id:', template.id)
+template = s.save_as_template(name=ns.target)
+print('Saved as template with id:', template.id)
