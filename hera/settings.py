@@ -43,13 +43,12 @@ IMAGE_STORAGE = BASE_DIR + '/images'
 DISPATCHER_SOCKET = ('localhost', 10001)
 DISPATCHER_HTTP = 'http://localhost:10002/'
 
-PROXY_RAW_ADDR = ('localhost', 10003)
+PROXY_RAW_ADDR = ('10.128.0.1', 10003)
 PROXY_WS_ADDR = ('localhost', 10004)
 PROXY_HTTP_ADDR = ('localhost', 10005)
 
 PROXY_WS = 'ws://%s:%d/' % PROXY_WS_ADDR
 PROXY_HTTP = 'http://%s:%d/' % PROXY_HTTP_ADDR
-PROXY_IS_LOCAL = True
 
 REDIS_ADDR = ('localhost', 6379)
 REDIS_DB_BASE = 'hera_'

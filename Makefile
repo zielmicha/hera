@@ -28,7 +28,7 @@ run:
 
 help:
 	@echo "Following targets are avaiable:"
-	@echo " run_dispatcher run_proxy run_spawner run_apiserver run_django"
+	@echo " run_dispatcher run_proxy run_spawner run_apiserver run_django run_netd"
 
 run_dispatcher:
 	make run MODULE=dispatcher
@@ -45,4 +45,7 @@ run_apiserver:
 run_django:
 	. venv/bin/activate; ./manage.py runserver
 
-.PHONY: deps agent run run_proxy run_dispatcher run_spawner run_apiserver run_django setup
+run_netd:
+	sudo python hera/netd.py $(shell id -u)
+
+.PHONY: deps agent run run_proxy run_dispatcher run_spawner run_apiserver run_django run_netd setup

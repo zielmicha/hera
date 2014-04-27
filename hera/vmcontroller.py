@@ -27,6 +27,8 @@ class VM:
         self.heartbeat_callback = heartbeat_callback
         self.close_callback = close_callback
 
+        self.netd_connection = None
+
         self.lock = threading.Lock()
         self.closed = False
 
@@ -34,13 +36,14 @@ class VM:
         self.start_server()
         self.start_qemu(**kwargs)
 
-    def start_qemu(self, memory, disk, cmdline=''):
+    def start_qemu(self, memory, disk, id=1, cmdline=''):
+        tap_name = self.get_tap()
         args = [
             'qemu-system-x86_64',
             '-enable-kvm',
             '-kernel', 'agent/build/kernel',
             '-initrd', 'agent/build/ramdisk',
-            '-append', 'ip=dhcp ' + cmdline,
+            '-append', cmdline,
             '-nographic',
 ## Disk
             '-drive', 'file=%s,if=virtio' % disk,
@@ -49,7 +52,7 @@ class VM:
             '-chardev', 'socket,id=agent,path=' + self.socket_name,
             '-device', 'virtserialport,chardev=agent,name=hera.agent',
 ## Network
-            '-net', 'user',
+            '-net', 'tap,ifname=%s,script=no,downscript=no' % tap_name,
             '-net', 'nic,model=rtl8139',
 ## Memory
             '-m', str(memory),
@@ -58,6 +61,15 @@ class VM:
         self.process = subprocess.Popen(args,
                                         stdin=devnull,
                                         stdout=devnull)
+
+    def get_tap(self):
+        self.netd_connection = socket.socket(socket.AF_UNIX)
+        self.netd_connection.connect('/var/run/hera.netd.%d.sock' % os.getuid())
+        name = self.netd_connection.makefile('r', 1).readline().strip()
+        if not name:
+            raise Exception('netd call failed')
+        self.log('acquired TAP device')
+        return name
 
     def start_server(self):
         sock = socket.socket(socket.AF_UNIX)
@@ -147,6 +159,9 @@ class VM:
             if self.closed:
                 return
             self.closed = True
+
+        if self.netd_connection:
+            self.netd_connection.close()
 
         self.write_queue.put(CLOSE)
         self._kill_qemu()

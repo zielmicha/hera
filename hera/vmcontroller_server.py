@@ -6,6 +6,7 @@ import logging
 import threading
 import json
 import time
+import struct
 
 from hera import vmcontroller
 from hera import accounting
@@ -75,19 +76,30 @@ class Server:
         self.vm.start(
             memory=self.stats['memory'],
             disk=self.disk.path,
+            id=self.res_id,
             cmdline=self.get_cmdline())
 
     def get_cmdline(self):
         proxy_local = settings.PROXY_RAW_ADDR
-        if settings.PROXY_IS_LOCAL:
-            # use host address inside Qemu user network
-            proxy_local = '10.0.2.2', proxy_local[1]
         cmdline = 'hera.proxy_local=%s:%d' % proxy_local
         cmdline += ' hera.proxy_ws_remote=' + settings.PROXY_WS
         cmdline += ' hera.proxy_http_remote=' + settings.PROXY_HTTP
         if self.disk.new:
             cmdline += ' hera.format_disk=true'
+        cmdline += ' ' + self.get_ip_config()
         return cmdline
+
+    def get_ip_config(self):
+        def numip(i):
+            return socket.inet_ntoa(struct.pack('!I', i))
+        ip_count = 2**(32-9)
+        ip_id = (self.get_ip_id() % (ip_count - 1)) + 1
+        net = '10.128.0.0'
+        neti, = struct.unpack('!I', socket.inet_aton(net))
+        return 'ip=%s::%s:255.128.0.0' % (numip(neti + ip_id), numip(neti + 1))
+
+    def get_ip_id(self):
+        return uuid.UUID(self.vm_id).int
 
     def server_loop(self):
         while True:
