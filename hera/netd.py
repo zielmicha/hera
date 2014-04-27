@@ -4,6 +4,7 @@ import argparse
 import os
 import threading
 import pwd
+import time
 
 parser = argparse.ArgumentParser(description='''
 Call like this:
@@ -40,6 +41,7 @@ def handle(conn):
         # wait for exit
         file.readline()
     finally:
+        time.sleep(0.2) # make sure that Qemu is really killed
         exit()
 
 while True:

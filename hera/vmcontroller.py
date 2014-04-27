@@ -160,11 +160,12 @@ class VM:
                 return
             self.closed = True
 
+        self.write_queue.put(CLOSE)
+        self._kill_qemu()
+
         if self.netd_connection:
             self.netd_connection.close()
 
-        self.write_queue.put(CLOSE)
-        self._kill_qemu()
         self.close_callback()
 
     def _kill_qemu(self):
