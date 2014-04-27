@@ -96,7 +96,7 @@ class Server:
         ip_id = (self.get_ip_id() % (ip_count - 1)) + 1
         net = '10.128.0.0'
         neti, = struct.unpack('!I', socket.inet_aton(net))
-        return 'ip=%s::%s:255.128.0.0' % (numip(neti + ip_id), numip(neti + 1))
+        return 'ip=%s::%s:255.128.0.0:sandbox' % (numip(neti + ip_id), numip(neti + 1))
 
     def get_ip_id(self):
         return uuid.UUID(self.vm_id).int

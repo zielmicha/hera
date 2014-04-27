@@ -34,6 +34,7 @@ proc startProcess*(args: seq[string], files: openarray[TFileHandle],
     # Chroot
     if chroot != nil:
       checkedChroot(chroot)
+      discard chdir("/")
     # Exec
     let sysArgs = allocCStringArray(args)
     discard execvp(sysArgs[0], sysArgs)
