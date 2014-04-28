@@ -21,7 +21,7 @@ class Session:
             raise ValueError('unsafely big timeout - TODO: add timeout in vm creation')
 
         data = {
-            'owner': owner,
+            'owner': owner.name,
             'stats': json.dumps({
                 'memory': memory,
                 'timeout': timeout,
@@ -34,7 +34,11 @@ class Session:
 
         if resp["status"] == 'ok':
             info = resp['id']
-            vm = models.VM(vm_id=info[0], address=','.join(map(str, info[1:])))
+            vm = models.VM(
+                stats=data['stats'],
+                creator=owner,
+                vm_id=info[0],
+                address=','.join(map(str, info[1:])))
             vm.save()
             return {'status': 'ok', 'id': vm.vm_id}
         else:
@@ -53,7 +57,8 @@ class Session:
         return vm_call(vm.address, dict(args, type=action))
 
     def verify_owner(self, owner):
-        return '_' + owner
+        # TODO: verify permissions, handle `me`
+        return models.Account.objects.get(name=owner)
 
     def verify_disk(self, disk):
         if disk.startswith('new,'):

@@ -170,3 +170,4 @@ class Server:
         if self.disk:
             self.disk.decref()
             self.disk = None
+        accounting.derivative_resource_closed(self.res_id)

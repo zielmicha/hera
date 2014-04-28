@@ -3,7 +3,9 @@ Django==1.6.2
 South==0.8.4
 asyncio==0.4.1
 bottle==0.12.5
+django-registration==1.0
 ipython==2.0.0
+jsonfield==0.9.20
 pyflakes==0.8.1
 requests==2.2.1
 stevedore==0.15

@@ -5,7 +5,7 @@ admin.site.register(models.VM)
 
 admin.site.register(models.DerivativeResource)
 
-admin.site.register(models.ResourceRefreshed)
+admin.site.register(models.Account)
 
 class DiskAdmin(admin.ModelAdmin):
     list_display = ('owner', 'refcount', 'backing', 'created', 'timeout')
