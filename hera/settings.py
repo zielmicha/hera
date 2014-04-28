@@ -26,6 +26,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
 
     'south',
+    'registration',
     'hera',
     'hera.webapp',
 )
