@@ -1,8 +1,12 @@
 from hera import api
+from hera import apimiddleware
 
 import bottle
+import base64
 
-from bottle import request
+from bottle import request, response, default_app
+
+default_app.push()
 
 @bottle.post('/sandbox/')
 def create_sandbox():
@@ -19,7 +23,15 @@ def sandbox_action(id, action):
         id, action, request.forms)
 
 def get_session():
-    return api.Session()
+    auth = request.headers.get('Authorization', '')
+    if not auth.startswith('Basic '):
+        response.status = 401
+        response.set_header('WWW-Authenticate', 'Basic realm="use API key as password"')
+    user_pass = base64.b64decode(auth.split(' ')[1])
+    account, _, api_key = user_pass.partition(b':')
+    return api.Session(account, api_key)
+
+app = apimiddleware.make()
 
 if __name__ == '__main__':
-    bottle.run(host='localhost', port=8080, server='cherrypy')
+    bottle.run(app=app, host='localhost', port=8080, server='cherrypy')

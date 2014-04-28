@@ -2,17 +2,21 @@ from hera import accounting
 from hera import models
 from hera import settings
 
-from django.utils.crypto import constant_time_compare
+from django.core.exceptions import PermissionDenied
 
 import requests
 import json
 import socket
+import hmac
 
 CALL_TIMEOUT = 600 # seconds # <-- TODO: warn in docs
 
 class Session:
-    def __init__(self):
-        pass
+    def __init__(self, account, api_key):
+        self.account = models.Account.get_account(account)
+        expected = self.account.get_api_key().encode()
+        if not hmac.compare_digest(expected, api_key):
+            raise PermissionDenied()
 
     def create_sandbox(self, owner, memory, timeout, disk):
         owner = self.verify_owner(owner)
@@ -57,8 +61,13 @@ class Session:
         return vm_call(vm.address, dict(args, type=action))
 
     def verify_owner(self, owner):
-        # TODO: verify permissions, handle `me`
-        return models.Account.objects.get(name=owner)
+        if owner == 'me':
+            return self.account
+        else:
+            account = models.Account.objects.get(name=owner)
+            if account.name != self.account.name: # TODO: something more sophisticated
+                raise PermissionDenied()
+            return account
 
     def verify_disk(self, disk):
         if disk.startswith('new,'):

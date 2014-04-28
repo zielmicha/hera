@@ -11,12 +11,30 @@ except ImportError:
 
 URL = 'http://localhost:8080/'
 
+default_auth = None
+
+_auth = os.environ.get('HERA_AUTH')
+if _auth:
+    default_auth = _auth.split(':')
+
+def get_auth(auth):
+    if not auth:
+        if not default_auth:
+            raise ValueError('Not authenticated (pass auth keyword argument ' \
+                             'or set heraclient.default_auth)')
+        auth = default_auth
+    if not isinstance(auth, (tuple, list)) or len(auth) != 2 \
+       or not all(map(lambda x: isinstance(x, (str, bytes)), auth)):
+        raise ValueError('Bad auth data format (%r). Expected tuple of (login, api_key)' % auth)
+    return tuple(auth)
+
 class Sandbox(object):
-    def __init__(self, id):
+    def __init__(self, id, auth=None):
         self.id = id
+        self.auth = get_auth(auth)
 
     @classmethod
-    def create(self, timeout, disk, owner='me', memory=128):
+    def create(self, timeout, disk, owner='me', memory=128, auth=None):
         if isinstance(disk, Template):
             disk = disk.id
         assert isinstance(memory, int)
@@ -27,10 +45,10 @@ class Sandbox(object):
             'timeout': timeout,
             'disk': disk,
             'memory': memory,
-        })
+        }, auth=get_auth(auth))
         response_raise(resp)
         resp = resp.json()
-        return Sandbox(resp['id'])
+        return Sandbox(resp['id'], auth=auth)
 
     def save_as_template(self, name=None):
         assert isinstance(name, (type(None), str))
@@ -81,7 +99,8 @@ class Sandbox(object):
         self.action('kill')
 
     def action(self, type, **args):
-        resp = requests.post(URL + 'sandbox/%s/%s' % (self.id, type), data=args)
+        resp = requests.post(URL + 'sandbox/%s/%s' % (self.id, type), data=args,
+                             auth=self.auth)
         response_raise(resp)
         return resp.json()
 

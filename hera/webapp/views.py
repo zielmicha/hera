@@ -38,7 +38,6 @@ class AccountAPI(BaseAccountView):
 
     def get_context_data(self, **kwargs):
         context = BaseAccountView.get_context_data(self, **kwargs)
-        context['api_key'] = 'be4e37f1900002c6966ee831efe0f6585fcf50f7'
         return context
 
     def post(self, *args, **kwargs):
