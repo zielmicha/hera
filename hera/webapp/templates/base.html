@@ -21,10 +21,10 @@
     <div class="navbar-collapse collapse navbar-responsive-collapse">
       <ul class="nav navbar-nav">
         <li><a href="/">New</a></li>
-        <li class="active"><a href="/account">Account</a></li>
+        <li><a href="/account/">Account</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        <li><a href="/login">Login</a></li>
+        <li><a href="/accounts/login/">Login</a></li>
       </ul>
     </div>
   </div>
@@ -33,5 +33,8 @@
   <div class="container">
     {% block content %}{% endblock %}
   </div>
+  <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="/static/js/bootstrap.min.js"></script>
+  <script src="/static/main.js"></script>
 </body>
 </html>

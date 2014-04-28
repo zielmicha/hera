@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% block title %}Account{% endblock %}
+{% block content %}
+
+<div class="col-sm-3">
+  <ul class="nav nav-pills nav-stacked">
+    <li><a href="/account/">Overview</a></li>
+    <li><a href="/account/billing">Billing</a></li>
+
+    <li class="divider"></li>
+    <li class="dropdown" id="account-dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+        {{ account }} account<b class="caret"></b></a>
+      <ul class="dropdown-menu">
+        <li><a href="#">zielmicha</a></li>
+        <li><a href="#">foo</a></li>
+        <li><a href="/account/add">
+            <i class="glyphicon glyphicon-plus-sign"></i> Add subaccount</a></li>
+      </ul>
+    </li>
+    <li><a href="/account/{{ account }}/overview">Overview</a></li>
+    <li><a href="/account/{{ account }}/api">API key</a></li>
+    <li><a href="/account/{{ account }}/templates">Templates</a></li>
+
+  </ul>
+</div>
+<div class="col-sm-9">
+  {% block account_content %}Main content goes here{% endblock %}
+</div>
+
+{% endblock %}
