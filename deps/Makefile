@@ -1,6 +1,7 @@
 PATH:=$(shell pwd)/buildroot/output/host/usr/bin/:$(PATH)
+GRUNT=$(HOME)/node_modules/grunt-cli/bin/grunt
 
-all: busybox kernel buildroot
+all: bootstrap busybox kernel buildroot
 
 bash:
 	bash
@@ -17,4 +18,13 @@ buildroot:
 	rsync buildroot.config buildroot/.config
 	make -C buildroot -j4
 
-.PHONY: busybox kernel buildroot
+bootstrap:
+	npm install grunt-cli@0.1.13
+	cd bootstrap; npm install grunt@0.4.2
+	cd bootstrap; npm install
+	cd bootstrap; $(GRUNT) dist
+	# Nodejs people can't use git and put build artifacts into repo...
+	#cd bootswatch; npm install
+	#cd bootswatch; $(GRUNT) swatch
+
+.PHONY: busybox kernel buildroot bootstrap

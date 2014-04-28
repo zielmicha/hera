@@ -27,6 +27,7 @@ INSTALLED_APPS = (
 
     'south',
     'hera',
+    'hera.webapp',
 )
 
 DATABASES = {
@@ -37,6 +38,11 @@ DATABASES = {
 }
 
 STATIC_URL = '/static/'
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "deps/bootstrap/dist"),
+    os.path.join(BASE_DIR, "deps/bootswatch"),
+)
 
 IMAGE_STORAGE = BASE_DIR + '/images'
 

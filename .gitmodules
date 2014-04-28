@@ -7,3 +7,9 @@
 [submodule "deps/buildroot"]
 	path = deps/buildroot
 	url = git://git.buildroot.net/buildroot
+[submodule "deps/bootstrap"]
+	path = deps/bootstrap
+	url = https://github.com/twbs/bootstrap
+[submodule "deps/bootswatch"]
+	path = deps/bootswatch
+	url = https://github.com/thomaspark/bootswatch/
