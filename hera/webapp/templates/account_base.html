@@ -11,17 +11,18 @@
     <li class="divider"></li>
     <li class="dropdown" id="account-dropdown">
       <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-        {{ account }} account<b class="caret"></b></a>
+        {{ account.name }} account<b class="caret"></b></a>
       <ul class="dropdown-menu">
-        <li><a href="#">zielmicha</a></li>
-        <li><a href="#">foo</a></li>
+        {% for account in user.accounts.objects %}
+        <li><a href="/account/{{ account.name }}/overview">{{ account.name }}</a></li>
+        {% endfor %}
         <li><a href="/account/add">
             <i class="glyphicon glyphicon-plus-sign"></i> Add subaccount</a></li>
       </ul>
     </li>
-    <li><a href="/account/{{ account }}/overview">Overview</a></li>
-    <li><a href="/account/{{ account }}/api">API key</a></li>
-    <li><a href="/account/{{ account }}/templates">Templates</a></li>
+    <li><a href="/account/{{ account.name }}/overview">Overview</a></li>
+    <li><a href="/account/{{ account.name }}/api">API key</a></li>
+    <li><a href="/account/{{ account.name }}/templates">Templates</a></li>
 
   </ul>
 </div>

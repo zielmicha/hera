@@ -2,7 +2,7 @@ from hera import accounting
 from hera import models
 from hera import settings
 
-from django.core import signing
+from django.utils.crypto import constant_time_compare
 
 import requests
 import json

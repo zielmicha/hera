@@ -7,6 +7,7 @@ from django.contrib.auth import models as auth_models
 import datetime
 import os
 import jsonfield
+import binascii
 
 class VM(models.Model):
     creator = models.ForeignKey('Account')
@@ -39,14 +40,15 @@ class DerivativeResourceUsed(models.Model):
     prize = models.FloatField()
 
 class Account(models.Model):
-    billing_owner = models.ForeignKey(auth_models.User)
+    billing_owner = models.ForeignKey(auth_models.User,
+                                      related_name='accounts')
     is_main = models.BooleanField()
     name = models.CharField(max_length=100, unique=True)
     api_key = models.CharField(max_length=50)
 
-    prize_per_second_limit = models.FloatField()
-    prize_used = models.FloatField()
-    prize_transferred_to = models.FloatField()
+    prize_per_second_limit = models.FloatField(default=1e100)
+    prize_used = models.FloatField(default=0.0)
+    prize_transferred_to = models.FloatField(default=0.0)
 
     def get_api_key(self):
         if not self.api_key:
@@ -55,13 +57,29 @@ class Account(models.Model):
         return self.api_key
 
     def regen_api_key(self):
-        self.api_key = os.urandom(16).encode('hex')
+        self.api_key = binascii.hexlify(os.urandom(16))
 
-    @transaction.atomic
+    def is_privileged(self, user):
+        return user == self.billing_owner
+
     @classmethod
+    def get_account(self, name):
+        try:
+            return Account.objects.get(name=name)
+        except Account.DoesNotExist as err:
+            # maybe main account not yet created for user?
+            try:
+                user = auth_models.User.objects.get(username=name)
+            except Account.DoesNotExist:
+                raise err
+            else:
+                return Account.get_main_for_user(user)
+
+    @classmethod
+    @transaction.atomic
     def get_main_for_user(self, user):
         account, _ = self.objects.get_or_create(billing_owner=user, is_main=True,
-                                                defaults=dict(name=user.name))
+                                                defaults=dict(name=user.username))
         return account
 
 class Disk(models.Model):

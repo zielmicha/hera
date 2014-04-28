@@ -5,10 +5,10 @@
 
 <form method=POST>{% csrf_token %}
   <div class="form-group">
-    API key for account {{ account }}:
+    API key for account {{ account.name }}:
   </div>
   <div class="form-group">
-    <input type=text class="form-control" disabled value="{{ api_key }}">
+    <input type=text class="form-control" disabled value="{{ account.get_api_key }}">
   </div>
   <div class="form-group">
       <button class="btn btn-danger">Regenerate key</button>
