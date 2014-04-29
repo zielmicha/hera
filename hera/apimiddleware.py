@@ -7,7 +7,6 @@ def make():
     app.catchall = False
 
     def error_catcher(environ, start_response):
-        # maybe better to fake the start_response callable but this work
         try:
             return app.wsgi(environ, start_response)
         except PermissionDenied:

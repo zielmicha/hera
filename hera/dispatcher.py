@@ -22,8 +22,7 @@ VmCreationRequest = collections.namedtuple('VmCreationRequest',
                                            'owner stats res_id')
 
 def create_vm(owner, stats):
-    res = accounting.add_derivative_resource(owner, stats,
-                                             timeout=60)
+    res = accounting.add_derivative_vm_resource(owner, stats)
     try:
         return _create_vm(VmCreationRequest(owner, stats, res.id))
     except Exception:

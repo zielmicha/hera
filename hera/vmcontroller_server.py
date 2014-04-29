@@ -14,6 +14,7 @@ from hera import settings
 from hera import disks
 
 HALT_TIMEOUT = 0.2
+TIME_BETWEEN_REGISTRATIONS = 2
 
 def spawn(request):
     sock = socket.socket()
@@ -51,18 +52,24 @@ class Server:
         self.server_sock = server_sock
         self.disk = None
         self.start_time = time.time()
+        self.last_resource_registration = 0
 
     def loop(self):
         self.init()
         self.server_loop()
 
+    def register_resource(self):
+        accounting.derivative_resource_used(self.res_id, user_type='vm',
+                                            user_id=self.vm_id)
+
     def init(self):
         def heartbeat_callback():
             time_left = time.time() - self.start_time
+            if time.time() - self.last_resource_registration > TIME_BETWEEN_REGISTRATIONS:
+                self.last_resource_registration = time.time()
+                threading.Thread(target=self.register_resource).start()
             if time_left > self.stats['timeout']:
                 self.vm.close()
-            accounting.derivative_resource_used(self.res_id, user_type='vm',
-                                                user_id=self.vm_id)
 
         self.vm = vmcontroller.VM(
             heartbeat_callback=heartbeat_callback,

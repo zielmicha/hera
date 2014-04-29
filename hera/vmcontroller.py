@@ -117,7 +117,8 @@ class VM:
         if 'outofband' in resp:
             oob_type = resp['outofband']
             if oob_type == 'heartbeat':
-                self.heartbeat_callback()
+                if not self.closed:
+                    self.heartbeat_callback()
         else:
             self.read_queue.put(resp)
 

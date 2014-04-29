@@ -33,6 +33,9 @@ class DerivativeResource(models.Model):
                 self.closed_at = datetime.datetime.now()
             self.save()
 
+    def __str__(self):
+        return 'DerivativeResource (%s, %s)' % (self.user_type, self.user_id)
+
 class DerivativeResourceUsed(models.Model):
     resource = models.ForeignKey(DerivativeResource)
     start_time = models.DateTimeField(auto_now_add=True)
@@ -49,6 +52,9 @@ class Account(models.Model):
     prize_per_second_limit = models.FloatField(default=1e100)
     prize_used = models.FloatField(default=0.0)
     prize_transferred_to = models.FloatField(default=0.0)
+
+    def __str__(self):
+        return 'Account ' + self.name
 
     def get_api_key(self):
         if not self.api_key:
