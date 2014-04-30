@@ -30,7 +30,10 @@ def pretty_delta(value):
 
 @register.filter
 def vm_uuid(value):
-    return html.format_html('<a href="/sandbox/{0}/" class=vm-uuid>{0}</a>', value)
+    if value == 'undefined':
+        return 'initializing...'
+    else:
+        return html.format_html('<a href="/sandbox/{0}/" class=vm-uuid>{0}</a>', value)
 
 @register.filter
 def parse_json(value):

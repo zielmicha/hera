@@ -119,8 +119,8 @@ class Disk(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     timeout = models.FloatField(default=1e100)
 
-    def check_owner(self, owner):
-        pass
+    def is_privileged(self, account):
+        return account == self.owner
 
 class Template(models.Model):
     owner = models.ForeignKey('Account', null=True, blank=True)
@@ -128,5 +128,8 @@ class Template(models.Model):
     disk = models.ForeignKey('Disk')
     name = models.CharField(max_length=300, null=True, blank=True)
 
-    def check_owner(self, owner):
-        pass
+    def is_privileged(self, account, operation):
+        if operation == 'read' and self.public:
+            return True
+        else:
+            return account == self.owner

@@ -73,8 +73,11 @@ class Session:
         if disk.startswith('new,'):
             return disk
         else:
-            # TODO: verify permissions
-            return disk
+            instance = models.Template.objects.get(id=disk)
+            if instance.is_privileged(self.account, operation='read'):
+                return disk
+            else:
+                raise PermissionDenied()
 
 def vm_call(addr, args, expect_response=True):
     host, port, secret = addr.split(',')
