@@ -123,7 +123,7 @@ class Disk(models.Model):
         return account == self.owner
 
 class Template(models.Model):
-    owner = models.ForeignKey('Account', null=True, blank=True)
+    owner = models.ForeignKey('Account', null=True, blank=True, related_name='templates')
     public = models.BooleanField(default=False)
     disk = models.ForeignKey('Disk')
     name = models.CharField(max_length=300, null=True, blank=True)

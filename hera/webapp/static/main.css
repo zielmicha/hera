@@ -13,3 +13,7 @@
 .vm-uuid {
     font-family: monospace;
 }
+
+.float-right {
+    float: right;
+}

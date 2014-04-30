@@ -1,0 +1,27 @@
+{% extends "account_base.html" %}
+{% load url from future %}
+{% block title %}Account{% endblock %}
+{% block account_content %}
+<h2>Templates of {{ account.name }}
+<a class="btn btn-primary float-right">Create new template</a></h2>
+<table class="table table-striped">
+<tr>
+  <th>ID
+  <th>Name
+  <th>Public
+  <th>Action
+</tr>
+{% for template in templates %}
+<tr>
+  <td>{{ template.id }}
+  <td>{{ account.name }}/{{ template.name }}
+  <td>{% if template.public %}Public{% else %}Private{% endif %}
+  <td><form method=post>{% csrf_token %}
+    <input type=hidden name=id value="{{ template.id }}">
+    <button name=action value=clone type=submit class="btn btn-primary btn-xs">Clone and edit</button>
+    <button name=action value=delete type=submit class="btn btn-danger btn-xs">Delete</button>
+    </form>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

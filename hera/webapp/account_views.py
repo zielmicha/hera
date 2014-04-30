@@ -53,3 +53,11 @@ class AccountAPI(BaseAccountView):
         self.account.regen_api_key()
         self.account.save()
         return self.get(*args, **kwargs)
+
+class AccountTemplates(BaseAccountView):
+    template_name = "account_templates.html"
+
+    def get_context_data(self, **kwargs):
+        context = BaseAccountView.get_context_data(self, **kwargs)
+        context['templates'] = self.account.templates.all()
+        return context
