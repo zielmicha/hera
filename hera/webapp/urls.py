@@ -3,7 +3,8 @@ from django.contrib import admin
 from django.conf.urls.static import static
 from django.conf import settings
 from django.views.generic import RedirectView, TemplateView
-from hera.webapp import views
+from hera.webapp import account_views
+from hera.webapp import sandbox_views
 
 admin.autodiscover()
 
@@ -15,8 +16,9 @@ urlpatterns = patterns('',
                        url(r'^account$', RedirectView.as_view(url='/account/')),
                        url(r'^users/', RedirectView.as_view(url='/account')),
                        url(r'^$', TemplateView.as_view(template_name='main.html')),
-                       url(r'^account/$', views.UserOverview.as_view()),
-                       url(r'^account/billing$', views.UserBilling.as_view()),
-                       url(r'^account/(.+)/overview$', views.AccountOverview.as_view()),
-                       url(r'^account/(.+)/api$', views.AccountAPI.as_view(),)
+                       url(r'^sandbox/(.+)/$', sandbox_views.Sandbox.as_view()),
+                       url(r'^account/$', account_views.UserOverview.as_view()),
+                       url(r'^account/billing$', account_views.UserBilling.as_view()),
+                       url(r'^account/(.+)/overview$', account_views.AccountOverview.as_view()),
+                       url(r'^account/(.+)/api$', account_views.AccountAPI.as_view(),)
 ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

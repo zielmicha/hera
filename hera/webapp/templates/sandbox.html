@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% block title %}Sandbox{% endblock %}
+{% block content %}
+{% load hera_extras %}
+<h2>Sandbox {{ sandbox.vm_id|vm_uuid }}</h2>
+<h3>Startup config</h3>
+<ul>
+  <li>Owner: {{ resource.owner.name }}
+  <li>Memory: {{ sandbox.stats_parsed.memory }} MB
+  <li>Disk: {{ sandbox.stats_parsed.disk }}
+  <li>Timeout: {{ sandbox.stats_parsed.timeout }} s
+</ul>
+<h3>Temporal data</h3>
+<ul>
+  <li>Created: {{ resource.created }}
+  <li>Closed: {{ resource.closed_at }}
+  <li>Running time: {{ resource.running_time|pretty_delta }}
+</ul>
+{% endblock %}

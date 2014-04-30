@@ -1,7 +1,6 @@
 from django.views.generic import TemplateView
 from django.utils.functional import cached_property
 from hera import models
-import datetime
 
 class BaseView(TemplateView):
     def get_context_data(self, **kwargs):

@@ -2,6 +2,7 @@ from django import template
 from django.utils import html
 import datetime
 import babel.dates
+import json
 
 register = template.Library()
 
@@ -29,4 +30,8 @@ def pretty_delta(value):
 
 @register.filter
 def vm_uuid(value):
-    return html.format_html('<a href="/sandbox/{0}" class=vm-uuid>{0}</a>', value)
+    return html.format_html('<a href="/sandbox/{0}/" class=vm-uuid>{0}</a>', value)
+
+@register.filter
+def parse_json(value):
+    return json.loads(value).items()

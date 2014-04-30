@@ -8,6 +8,7 @@ import datetime
 import os
 import jsonfield
 import binascii
+import json
 
 def MoneyField(*args, **kwargs):
     return models.DecimalField(*args, decimal_places=10, max_digits=20, **kwargs)
@@ -17,6 +18,10 @@ class VM(models.Model):
     stats = jsonfield.JSONField()
     vm_id = models.CharField(max_length=120)
     address = models.CharField(max_length=120)
+
+    @property
+    def stats_parsed(self):
+        return json.loads(self.stats)
 
 class DerivativeResource(models.Model):
     owner = models.ForeignKey('Account')
