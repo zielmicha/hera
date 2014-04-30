@@ -1,5 +1,6 @@
 from django.db.models import F
 from django.db import transaction
+from django.core.exceptions import PermissionDenied
 from hera import models
 from hera import settings
 
@@ -13,13 +14,14 @@ sizes = {
 }
 
 def clone_or_create_disk(id, owner, timeout):
-    owner = None
+    owner_account = models.Account.get_account(owner)
     if id.startswith('new,'):
-        return create_disk(id[4:], owner, timeout)
+        return create_disk(id[4:], owner_account, timeout)
     else:
         template = models.Template.objects.get(id=int(id))
-        template.check_owner(owner)
-        return Disk.clone(template, owner=owner, timeout=timeout)
+        if not template.is_privileged(owner_account, 'read'):
+            raise PermissionDenied()
+        return Disk.clone(template, owner=owner_account, timeout=timeout)
 
 def create_disk(request, owner, timeout):
     size = parse_size(request)
