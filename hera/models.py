@@ -36,7 +36,10 @@ class DerivativeResource(models.Model):
 
     @property
     def running_time(self):
-        return self.expiry - self.created
+        if self.closed_at:
+            return self.closed_at - self.created
+        else:
+            return self.expiry - self.created
 
     def close(self):
         if self.id:

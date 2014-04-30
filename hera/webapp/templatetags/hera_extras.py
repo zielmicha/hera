@@ -26,3 +26,7 @@ def pretty_delta(value):
     else:
         delta = value - datetime.datetime.now()
     return babel.dates.format_timedelta(delta, locale='en_US')
+
+@register.filter
+def vm_uuid(value):
+    return html.format_html('<a href="/sandbox/{0}" class=vm-uuid>{0}</a>', value)
