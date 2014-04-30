@@ -1,5 +1,6 @@
 from hera import api
 from hera import apimiddleware
+from hera import models
 
 import bottle
 import base64
@@ -22,6 +23,31 @@ def create_sandbox():
 def sandbox_action(id, action):
     return get_session().sandbox_action(
         id, action, request.forms)
+
+@bottle.get('/template/')
+def get_templates():
+    owner = get_session().account
+    templates = models.Template.objects.filter(owner=owner)
+    return dict(status='ok', templates=[
+        dict(id=template.id, name=template.name, public=template.public)
+        for template in templates ])
+
+@bottle.get('/template/:id')
+def get_template(id):
+    template = get_session().get_template(id, 'read')
+    return dict(id=template.id, name=template.name, public=template.public, status='ok')
+
+@bottle.post('/template/:id')
+def set_template(id):
+    template = get_session().get_template(id, 'write')
+    new_public = request.forms.get('public', None)
+    if new_public is not None:
+        template.public = new_public.lower() == 'true'
+    new_name = request.forms.get('name', None)
+    if new_name is not None:
+        template.name = new_name
+    template.save()
+    return {'status': 'ok'}
 
 def get_session():
     auth = request.headers.get('Authorization', '')

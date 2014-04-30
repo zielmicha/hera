@@ -130,8 +130,32 @@ class Process(object):
             return getattr(self, name).download().content
 
 class Template(object):
-    def __init__(self, id):
+    def __init__(self, id, auth=None, data=None):
         self.id = id
+        self.auth = get_auth(auth)
+        if not data:
+            resp = requests.get(URL + 'template/%s' % self.id, auth=self.auth)
+            response_raise(resp)
+            data = resp.json()
+        self.name = data['name']
+        self.public = data['public']
+
+    def change(self, public=None, name=None):
+        req = filter_out_if_none(dict(public=public, name=name))
+        resp = requests.post(URL + 'template/%s' % self.id, auth=self.auth, data=req)
+        response_raise(resp)
+        if public is not None:
+            self.public = public
+        if name is not None:
+            self.name = name
+
+    @classmethod
+    def list(self, auth=None):
+        auth = get_auth(auth)
+        resp = requests.get(URL + 'template/', auth=auth)
+        response_raise(resp)
+        return [ Template(item['id'], auth=auth, data=item)
+                 for item in resp.json()['templates'] ]
 
 def response_raise(resp):
     resp.raise_for_status()
@@ -142,6 +166,9 @@ def response_raise(resp):
         if stacktrace:
             msg += '\n' + stacktrace
         raise ApiError(msg)
+
+def filter_out_if_none(dict):
+    return { k:v for k,v in dict.items() if v is not None }
 
 def new_disk(size):
     return 'new,%s' % size
