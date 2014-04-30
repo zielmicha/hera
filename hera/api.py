@@ -14,7 +14,7 @@ CALL_TIMEOUT = 600 # seconds # <-- TODO: warn in docs
 class Session:
     def __init__(self, account, api_key):
         self.account = models.Account.get_account(account)
-        expected = self.account.get_api_key().encode()
+        expected = self.account.get_api_key()
         if not hmac.compare_digest(expected, api_key):
             raise PermissionDenied()
 

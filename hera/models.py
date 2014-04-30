@@ -9,6 +9,9 @@ import os
 import jsonfield
 import binascii
 
+def MoneyField(*args, **kwargs):
+    return models.DecimalField(*args, decimal_places=10, max_digits=20, **kwargs)
+
 class VM(models.Model):
     creator = models.ForeignKey('Account')
     stats = jsonfield.JSONField()
@@ -21,11 +24,19 @@ class DerivativeResource(models.Model):
     expiry = models.DateTimeField()
     closed_at = models.DateTimeField(null=True)
 
-    base_prize_per_second = models.FloatField()
+    base_prize_per_second = MoneyField()
     custom = jsonfield.JSONField()
 
     user_type = models.CharField(max_length=100)
     user_id = models.CharField(max_length=100)
+
+    @property
+    def expired(self):
+        return datetime.datetime.now() > self.expiry
+
+    @property
+    def running_time(self):
+        return self.expiry - self.created
 
     def close(self):
         if self.id:
@@ -40,7 +51,7 @@ class DerivativeResourceUsed(models.Model):
     resource = models.ForeignKey(DerivativeResource)
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(auto_now_add=True)
-    prize = models.FloatField()
+    prize = MoneyField()
 
 class Account(models.Model):
     billing_owner = models.ForeignKey(auth_models.User,
@@ -50,8 +61,12 @@ class Account(models.Model):
     api_key = models.CharField(max_length=50)
 
     prize_per_second_limit = models.FloatField(default=1e100)
-    prize_used = models.FloatField(default=0.0)
-    prize_transferred_to = models.FloatField(default=0.0)
+    prize_used = MoneyField(default=0.0)
+    prize_transferred_to = MoneyField(default=0.0)
+
+    @property
+    def prize_balance(self):
+        return self.prize_transferred_to - self.prize_used
 
     def __str__(self):
         return 'Account ' + self.name
@@ -60,10 +75,10 @@ class Account(models.Model):
         if not self.api_key:
             self.regen_api_key()
             self.save()
-        return self.api_key
+        return self.api_key.encode()
 
     def regen_api_key(self):
-        self.api_key = binascii.hexlify(os.urandom(16))
+        self.api_key = binascii.hexlify(os.urandom(16)).decode()
 
     def is_privileged(self, user):
         return user == self.billing_owner

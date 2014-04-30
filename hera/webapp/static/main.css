@@ -1,3 +1,15 @@
 #account-dropdown {
     border-top: 1px solid #ccc;
 }
+
+.properties.big {
+    font-size: 1.3em;
+}
+
+.minus-balance {
+    color: #f66;
+}
+
+.vm-uuid {
+    font-family: monospace;
+}

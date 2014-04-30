@@ -65,7 +65,7 @@ def derivative_resource_used(id, user_type, user_id):
     real_time_left = (now - last_time).total_seconds()
     max_time_left = resource_timeouts[user_type]
     time_left = min(max_time_left, real_time_left)
-    prize = res.base_prize_per_second * time_left
+    prize = float(res.base_prize_per_second) * time_left
     models.DerivativeResourceUsed(resource=res,
                                   start_time=last_time,
                                   end_time=now,

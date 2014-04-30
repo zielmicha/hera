@@ -16,6 +16,7 @@ urlpatterns = patterns('',
                        url(r'^users/', RedirectView.as_view(url='/account')),
                        url(r'^$', TemplateView.as_view(template_name='main.html')),
                        url(r'^account/$', views.UserOverview.as_view()),
+                       url(r'^account/billing$', views.UserBilling.as_view()),
                        url(r'^account/(.+)/overview$', views.AccountOverview.as_view()),
                        url(r'^account/(.+)/api$', views.AccountAPI.as_view(),)
 ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -1,0 +1,34 @@
+{% extends "account_base.html" %}
+{% load url from future %}
+{% block title %}Account{% endblock %}
+{% block account_content %}
+{% load hera_extras %}
+
+<table class="properties big table">
+  <tr>
+    <td>Used credits:
+    <td>{{ account.prize_used|money_format }}
+  </tr>
+  <div class="form-group">
+    <td>Balance:
+    <td>{{ account.prize_balance|money_format }}
+  </div>
+</table>
+
+<h2>Recent sandboxes</h2>
+<table class="table table-striped">
+<tr>
+<th>UUID
+<th>Created at
+<th>Was running for
+</tr>
+{% for vm in recent_vms %}
+<tr>
+<td class=vm-uuid>{{ vm.user_id }}
+<td>{{ vm.created }}
+<td>{% if vm.expired %}{{ vm.running_time|pretty_delta }}{% else %}
+still running{% endif %}
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

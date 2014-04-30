@@ -4,6 +4,7 @@ from hera import apimiddleware
 import bottle
 import base64
 
+from django.core.exceptions import PermissionDenied
 from bottle import request, response, default_app
 
 default_app.push()
@@ -27,6 +28,7 @@ def get_session():
     if not auth.startswith('Basic '):
         response.status = 401
         response.set_header('WWW-Authenticate', 'Basic realm="use API key as password"')
+        raise PermissionDenied() # TODO: do something more friendly than crashing
     user_pass = base64.b64decode(auth.split(' ')[1])
     account, _, api_key = user_pass.partition(b':')
     return api.Session(account, api_key)
