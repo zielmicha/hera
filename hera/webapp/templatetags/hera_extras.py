@@ -36,5 +36,14 @@ def vm_uuid(value):
         return html.format_html('<a href="/sandbox/{0}/" class=vm-uuid>{0}</a>', value)
 
 @register.filter
+def res_vm_uuid(res):
+    delta = datetime.datetime.now() - res.expiry
+    uuid = res.user_id
+    if uuid == 'undefined' and delta > datetime.timedelta(seconds=5):
+        return 'initialization failed'
+    else:
+        return vm_uuid(uuid)
+
+@register.filter
 def parse_json(value):
     return json.loads(value).items()

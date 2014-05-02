@@ -24,7 +24,7 @@
 </tr>
 {% for vm in recent_vms %}
 <tr>
-<td>{{ vm.user_id|vm_uuid }}
+<td>{{ vm|res_vm_uuid }}
 <td>{{ vm.created }}
 <td>{% if vm.expired %}{{ vm.running_time|pretty_delta }}{% else %}
 still running{% endif %}
