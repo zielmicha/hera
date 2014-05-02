@@ -10,6 +10,11 @@
 [submodule "deps/bootstrap"]
 	path = deps/bootstrap
 	url = https://github.com/twbs/bootstrap
+    ignore = dirty
 [submodule "deps/bootswatch"]
 	path = deps/bootswatch
 	url = https://github.com/thomaspark/bootswatch/
+[submodule "deps/nginx"]
+	path = deps/nginx
+	url = https://github.com/nginx/nginx
+    ignore = dirty

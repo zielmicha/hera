@@ -27,4 +27,8 @@ bootstrap:
 	#cd bootswatch; npm install
 	#cd bootswatch; $(GRUNT) swatch
 
-.PHONY: busybox kernel buildroot bootstrap
+nginx:
+	cd nginx; if [ ! -e Makefile ]; then ./configure; fi
+	make -C nginx -j4
+
+.PHONY: busybox kernel buildroot bootstrap nginx
