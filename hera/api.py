@@ -21,8 +21,13 @@ class Session:
     def create_sandbox(self, owner, memory, timeout, disk):
         owner = self.verify_owner(owner)
         disk = self.verify_disk(disk)
-        if timeout > 600:
-            raise ValueError('unsafely big timeout - TODO: add timeout in vm creation')
+        if timeout > 600: # TODO: add timeout in vm creation
+            return {'status': 'TimeoutTooBig'}
+
+        memory = int(memory)
+
+        if memory < 32:
+            return {'status': 'NotEnoughMemoryRequested'}
 
         data = {
             'owner': owner.name,

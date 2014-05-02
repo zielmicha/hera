@@ -15,7 +15,7 @@ sizes = {
 
 def clone_or_create_disk(id, owner, timeout):
     owner_account = models.Account.get_account(owner)
-    if id.startswith('new,'):
+    if isinstance(id, str) and id.startswith('new,'):
         return create_disk(id[4:], owner_account, timeout)
     else:
         template = models.Template.objects.get(id=int(id))

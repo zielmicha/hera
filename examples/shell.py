@@ -14,7 +14,8 @@ parser.add_argument('template',
                    help='use template')
 args = parser.parse_args()
 
-s = heraclient.Sandbox.create(timeout=40, disk=args.template)
+s = heraclient.Sandbox.create(timeout=40, disk=args.template,
+                              memory=64)
 proc = s.execute(args=['bash', '-i'], stderr_to_stdout=True)
 
 def rev():
