@@ -62,4 +62,4 @@ def get_session():
 app = apimiddleware.make()
 
 if __name__ == '__main__':
-    bottle.run(app=app, host='localhost', port=8080, server='cherrypy')
+    bottle.run(app=app, host='localhost', port=8080, server='waitress')

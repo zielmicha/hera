@@ -9,7 +9,7 @@ try:
 except ImportError:
     import http.client as httplib
 
-URL = 'http://localhost:8080/'
+URL = 'http://api.hera.dev/'
 
 default_auth = None
 
