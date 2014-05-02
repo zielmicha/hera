@@ -3,6 +3,7 @@ from django.db import transaction
 from django.core.exceptions import PermissionDenied
 from hera import models
 from hera import settings
+from hera import tools
 
 import os
 import subprocess
@@ -46,15 +47,19 @@ class Disk:
         self.decref_done = False
 
     def create(self, size):
-        subprocess.check_call(['qemu-img', 'create',
-                               '-f', 'qcow2', self.path, '%d' % size])
+        self._call_qemu_img(['create',
+                             '-f', 'qcow2', self.path, '%d' % size])
         self.new = True
 
     def create_with_backing(self, path):
-        subprocess.check_call(['qemu-img', 'create',
-                               '-f', 'qcow2',
-                               '-b', path,
-                               self.path])
+        self._call_qemu_img(['create',
+                             '-f', 'qcow2',
+                             '-b', path,
+                             self.path])
+
+    def _call_qemu_img(self, args):
+        with tools.measure_time('qemu-img'):
+            subprocess.check_call(['eatmydata', 'qemu-img'] + args)
 
     @transaction.atomic
     def change_ref(self, dir):
