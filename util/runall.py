@@ -4,6 +4,8 @@ import os
 import select
 import atexit
 import sys
+import pty
+import traceback
 
 os.environ['PYTHONUNBUFFERED'] = '1'
 
@@ -20,11 +22,26 @@ def preexec():
     with open(CG + '/tasks', 'a') as f:
         f.write(str(os.getpid()) + '\n')
 
+class PtyPopen():
+    def __init__(self, args):
+        self.args = args
+        pid, master = pty.fork()
+        if pid == 0:
+            try:
+                self._child()
+            except:
+                traceback.print_exc()
+            finally:
+                os._exit(0)
+        else:
+            self.stdout = os.fdopen(master, 'rb', 1)
+
+    def _child(self):
+        os.execvp(self.args[0], self.args)
+
 procs = {}
 for task in tasks:
-    procs[task] = subprocess.Popen(['make', 'run_' + task],
-                                   stderr=subprocess.STDOUT, stdout=subprocess.PIPE,
-                                   close_fds=True, preexec_fn=preexec)
+    procs[task] = PtyPopen(['make', 'run_' + task])
 
 def finish():
     for pid in open(CG + '/tasks').read().split():
