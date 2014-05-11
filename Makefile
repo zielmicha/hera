@@ -48,4 +48,15 @@ run_django:
 run_netd:
 	sudo python hera/netd.py $(shell id -u)
 
-.PHONY: deps agent run run_proxy run_dispatcher run_spawner run_apiserver run_django run_netd setup
+run_nginx:
+	. venv/bin/activate; python util/nginx.py
+
+run_all:
+	./util/runall.py
+
+cgroup:
+	[ -e /sys/fs/cgroup/cpu/hera ] || sudo mkdir /sys/fs/cgroup/cpu/hera
+	sudo chown $(shell id -u) /sys/fs/cgroup/cpu/hera/*
+
+.PHONY: deps agent run run_proxy run_dispatcher run_spawner \
+	run_apiserver run_django run_netd run_nginx run_all setup
