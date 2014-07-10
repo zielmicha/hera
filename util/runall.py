@@ -22,6 +22,8 @@ def preexec():
     with open(CG + '/tasks', 'a') as f:
         f.write(str(os.getpid()) + '\n')
 
+preexec()
+
 class PtyPopen():
     def __init__(self, args):
         self.args = args
@@ -44,14 +46,15 @@ for task in tasks:
     procs[task] = PtyPopen(['make', 'run_' + task])
 
 def finish():
-    for pid in open(CG + '/tasks').read().split():
-        pid = int(pid)
-        if pid == os.getpid():
-            continue
-        try:
-            os.kill(pid, 9)
-        except OSError as err:
-            print('[Failed to kill %d: %s]' % (pid, err))
+    for i in range(5):
+        tasks = open(CG + '/tasks').read().split()
+        tasks = [ pid for pid in tasks
+                  if int(pid) != os.getpid() ]
+
+        print('[Killing tasks: %s]' % ' '.join(tasks))
+
+        subprocess.call(['sudo', 'kill', '-9'] + tasks)
+        if not tasks: break
 
 atexit.register(finish)
 
