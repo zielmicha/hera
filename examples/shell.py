@@ -19,10 +19,18 @@ args = parser.parse_args()
 
 s = heraclient.Sandbox.create(timeout=40, disk=args.template,
                               memory=64)
+
+def terminal_size():
+    import fcntl, termios, struct
+    h, w, hp, wp = struct.unpack('HHHH',
+        fcntl.ioctl(0, termios.TIOCGWINSZ,
+        struct.pack('HHHH', 0, 0, 0, 0)))
+    return h, w
+
 if args.chroot:
     proc = s.execute(args=['bash', '-i'],
                      stderr_to_stdout=True,
-                     pty_size=(50, 50))
+                     pty_size=terminal_size())
 else:
     proc = s.execute(args=['busybox', 'sh', '-i'],
                      chroot=False,
