@@ -69,6 +69,13 @@ proc exec(message: PJsonNode): PJsonNode =
   let stderrToStdout = message.getString("stderr") == "stdout"
   let doSync = message.getBool("sync", false)
   let useChroot = message.getBool("chroot", true)
+  let ptySizeJson = message.getSubjson("pty_size")
+
+  let ptySize =
+    if ptySizeJson == nil:
+      nil
+    else:
+      @[ptySizeJson[0].num.int, ptySizeJson[1].num.int]
 
   let args = makeArgs(message)
   var (stdin, stdout, stderr) = if doSync: makePipesSync()
@@ -78,7 +85,8 @@ proc exec(message: PJsonNode): PJsonNode =
 
   let pid = startProcess(args,
                          files=[stdin.procFd, stdout.procFd, stderr.procFd],
-                         chroot=if useChroot: "/mnt" else: nil)
+                         chroot=if useChroot: "/mnt" else: nil,
+                         ptySize=ptySize)
 
   discard stdin.procFd.close
   discard stdout.procFd.close

@@ -58,17 +58,23 @@ def finish():
 
 atexit.register(finish)
 
+reset_colors = '\033[0m'
+
 while True:
     r, w, x = select.select([ p.stdout for p in procs.values() ], [], [])
     stream = r[0]
     name = [ k for k, v in procs.items() if v.stdout == stream ][0]
+
+    data = '[%s] ' % (name.ljust(10), )
+    sys.stdout.buffer.write(data.encode())
+    sys.stdout.buffer.flush()
+
     ret = stream.readline()
+
     if not ret:
         del procs[name]
         ret = r'{exited}'
-    else:
-        data = '[%s] ' % (name.ljust(10), )
-        sys.stdout.buffer.write(data.encode())
-        sys.stdout.buffer.flush()
-        sys.stdout.buffer.write(ret)
-        sys.stdout.buffer.flush()
+
+    sys.stdout.buffer.write(ret)
+    sys.stdout.buffer.write(reset_colors.encode())
+    sys.stdout.buffer.flush()

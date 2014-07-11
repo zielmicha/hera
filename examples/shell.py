@@ -12,11 +12,22 @@ import tty
 parser = argparse.ArgumentParser(description='Run shell.')
 parser.add_argument('template',
                    help='use template')
+parser.add_argument('--no-chroot', dest='chroot', action='store_false',
+                    default=True,
+                    help='run initial busybox')
 args = parser.parse_args()
 
 s = heraclient.Sandbox.create(timeout=40, disk=args.template,
                               memory=64)
-proc = s.execute(args=['bash', '-i'], stderr_to_stdout=True)
+if args.chroot:
+    proc = s.execute(args=['bash', '-i'],
+                     stderr_to_stdout=True,
+                     pty_size=(50, 50))
+else:
+    proc = s.execute(args=['busybox', 'sh', '-i'],
+                     chroot=False,
+                     stderr_to_stdout=True,
+                     pty_size=None)
 
 def rev():
     while True:
@@ -30,9 +41,11 @@ t = threading.Thread(target=rev)
 t.daemon = True
 t.start()
 
-old = termios.tcgetattr(0)
-atexit.register(termios.tcsetattr, 0, termios.TCSADRAIN, old)
-tty.setcbreak(0)
+if args.chroot:
+    old = termios.tcgetattr(0)
+    atexit.register(termios.tcsetattr, 0, termios.TCSADRAIN, old)
+    tty.setcbreak(0)
+
 atexit.register(s.kill)
 
 while True:

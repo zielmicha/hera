@@ -25,7 +25,7 @@ proc timeValFromMilliseconds(timeout = 500): Ttimeval =
     result.tv_usec = ((timeout - seconds * 1000) * 1000).int32
 
 proc select*(readfds, writefds, exceptfds: var seq[TFileHandle],
-             timeout = 500): int {.tags: [FReadIO].} =
+             timeout: int = 500): int {.tags: [FReadIO].} =
   ## Traditional select function. This function will return the number of
   ## sockets that are ready to be read from, written to, or which have errors.
   ## If there are none; 0 is returned.

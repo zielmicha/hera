@@ -38,6 +38,8 @@ proc setupOptions =
 proc setupMounts =
   createDir("/dev")
   mount(fs="devtmpfs", target="/dev")
+  createDir("/dev/pts")
+  mount(fs="devpts", target="/dev/pts")
   createDir("/proc")
   mount(fs="proc", target="/proc")
   createDir("/sys")

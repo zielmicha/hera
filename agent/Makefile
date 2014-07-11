@@ -29,7 +29,7 @@ build/kernel:
 	cp ../deps/linux/arch/x86/boot/bzImage build/kernel
 
 build/agent: build/libagent.a
-	$(CC) fakelibs/fakedl.c build/libagent.a -static -o build/agent
+	$(CC) fakelibs/fakedl.c build/libagent.a -static -o build/agent -lutil
 
 build/libagent.a: build/symlinks build/ $(NIMRODSOURCES)
 	PATH=$(shell pwd)/build/symlinks:$(PATH) \

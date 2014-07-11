@@ -56,7 +56,7 @@ class Sandbox(object):
         return Template(resp['id'])
 
     def execute(self, args, sync=False, chroot=True, shell=False,
-                stderr_to_stdout=False):
+                stderr_to_stdout=False, pty_size=None):
         '''
         Execute process in sandbox.
         '''
@@ -68,6 +68,9 @@ class Sandbox(object):
         else:
             assert all( isinstance(param, str) for param in args )
             kwargs['args'] = json.dumps(args)
+
+        if pty_size:
+            kwargs['pty_size'] = json.dumps(pty_size)
 
         if stderr_to_stdout:
             kwargs['stderr'] = 'stdout'
