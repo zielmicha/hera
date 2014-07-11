@@ -1,6 +1,7 @@
 import os, posix
 import selectfile
 import agentio
+import forkpty
 
 proc exitnow*(code: cint): void {.importc: "exit".}
 
@@ -18,25 +19,14 @@ template forkBlock*(b: expr) =
 
 proc runCopier(amaster: TFileHandle, files: openarray[TFileHandle])
 
-type
-  TWinsize* = object
-    ws_row*: cushort          # rows, in characters
-    ws_col*: cushort          # columns, in characters
-    ws_xpixel*: cushort       # horizontal size, pixels
-    ws_ypixel*: cushort       # vertical size, pixels
-
-proc forkpty*(amaster: ptr cint; name: cstring; termp: pointer; winp: TWinsize): cint {.
- importc.}
-
 proc makeWinsize*(row: int, col: int): TWinsize =
   result.ws_row = cushort(row)
   result.ws_col = cushort(col)
 
 proc checkedForkPty*(winsize: seq[int], files: seq[TFileHandle]): TPid =
-  var amaster: cint = -1
-  let pid = forkpty(addr amaster, nil, nil, makeWinsize(winsize[0], winsize[1]))
-  if pid < 0 or amaster < 0:
-    osError(osLastError())
+  let ret = forkpty(makeWinsize(winsize[0], winsize[1]))
+  let pid = ret.pid
+  let amaster = ret.master
 
   if pid != 0:
     forkBlock:
@@ -46,6 +36,9 @@ proc checkedForkPty*(winsize: seq[int], files: seq[TFileHandle]): TPid =
   return pid
 
 proc runCopier(amaster: TFileHandle, files: openarray[TFileHandle]) =
+  finally:
+    discard close(amaster)
+
   while true:
     var fds: TFdSet
     var maxfd = 0
@@ -64,8 +57,10 @@ proc runCopier(amaster: TFileHandle, files: openarray[TFileHandle]) =
                     else: amaster
 
         var buff: array[1, int]
-        discard read(inFd, addr buff, 1)
-        discard write(outFd, addr buff, 1)
+        if read(inFd, addr buff, 1) != 1:
+          return
+        if write(outFd, addr buff, 1) != 1:
+          return
 
 when isMainModule:
   let p = checkedForkPty(@[40, 40],
