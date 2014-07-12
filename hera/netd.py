@@ -5,6 +5,7 @@ import os
 import threading
 import pwd
 import time
+import signal
 
 parser = argparse.ArgumentParser(description='''
 Call like this:
@@ -26,6 +27,15 @@ os.chmod(socket_path, 0o700)
 os.chown(socket_path, ns.uid, 0)
 sock.listen(5)
 
+exit_funcs = set()
+
+def sigexit(*args):
+    print('netd exiting')
+    for fun in exit_funcs:
+        fun()
+
+signal.signal(signal.SIGTERM, sigexit)
+
 def handle(conn):
     file = conn.makefile('rw', 1)
     tap_name = 'tap.hera.' + os.urandom(4).encode('hex')
@@ -33,8 +43,11 @@ def handle(conn):
                            '--user', user_name])
     subprocess.check_call('ifconfig %s up 0.0.0.0 promisc' % tap_name, shell=True)
     subprocess.check_call('brctl addif brhera %s' % tap_name, shell=True)
+
     def exit():
         subprocess.call('openvpn --rmtun --dev %s' % tap_name, shell=True)
+
+    exit_funcs.add(exit)
 
     try:
         file.write('%s\n' % tap_name)
@@ -43,6 +56,7 @@ def handle(conn):
     finally:
         time.sleep(0.2) # make sure that Qemu is really killed
         exit()
+        exit_funcs.remove(exit)
 
 while True:
     conn, addr = sock.accept()

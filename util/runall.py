@@ -6,6 +6,7 @@ import atexit
 import sys
 import pty
 import traceback
+import time
 
 os.environ['PYTHONUNBUFFERED'] = '1'
 
@@ -53,8 +54,13 @@ def finish():
 
         print('[Killing tasks: %s]' % ' '.join(tasks))
 
-        subprocess.call(['sudo', 'kill', '-9'] + tasks)
+        if i == 0:
+            sig = 15
+        else:
+            sig = 9
+        subprocess.call(['sudo', 'kill', '-%d' % sig] + tasks)
         if not tasks: break
+        time.sleep(0.3)
 
 atexit.register(finish)
 
