@@ -5,6 +5,7 @@ from django.conf import settings
 from django.views.generic import RedirectView, TemplateView
 from hera.webapp import account_views
 from hera.webapp import sandbox_views
+from hera.webapp import run_views
 
 admin.autodiscover()
 
@@ -22,4 +23,5 @@ urlpatterns = patterns('',
                        url(r'^account/(.+)/overview$', account_views.AccountOverview.as_view()),
                        url(r'^account/(.+)/api$', account_views.AccountAPI.as_view()),
                        url(r'^account/(.+)/templates$', account_views.AccountTemplates.as_view()),
+                       url(r'^run/(.+)/$', run_views.MainView.as_view())
 ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

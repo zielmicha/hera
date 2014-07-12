@@ -1,6 +1,7 @@
 from hera import api
 from hera import apimiddleware
 from hera import models
+from hera import settings
 
 import bottle
 import base64
@@ -62,4 +63,5 @@ def get_session():
 app = apimiddleware.make()
 
 if __name__ == '__main__':
-    bottle.run(app=app, host='localhost', port=8080, server='waitress')
+    host, port = settings.API_HTTP_ADDR
+    bottle.run(app=app, host=host, port=port, server='waitress')

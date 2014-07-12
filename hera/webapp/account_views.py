@@ -1,6 +1,8 @@
 from django.views.generic import TemplateView
 from django.utils.functional import cached_property
+from django.shortcuts import redirect
 from hera import models
+from hera.webapp import actions
 
 class BaseView(TemplateView):
     def get_context_data(self, **kwargs):
@@ -61,3 +63,15 @@ class AccountTemplates(BaseAccountView):
         context = BaseAccountView.get_context_data(self, **kwargs)
         context['templates'] = self.account.templates.all()
         return context
+
+    def post(self, _name):
+        action = self.request.POST['action']
+        id = self.request.POST['id']
+        template = models.Template.objects.get(owner=self.account, id=id)
+
+        if action == 'clone':
+            url = actions.clone(self.account, template)
+            return redirect(url)
+        elif action == 'delete':
+            actions.delete(self.user, template)
+            return redirect(self.request.url)

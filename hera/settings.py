@@ -50,6 +50,9 @@ IMAGE_STORAGE = BASE_DIR + '/images'
 DISPATCHER_SOCKET = ('localhost', 10001)
 DISPATCHER_HTTP = 'http://localhost:10002/'
 
+API_HTTP_ADDR = ('localhost', 8080)
+API_HTTP = 'http://%s:%d/' % API_HTTP_ADDR
+
 PROXY_RAW_ADDR = ('10.128.0.1', 10003)
 PROXY_WS_ADDR = ('localhost', 10004)
 PROXY_HTTP_ADDR = ('localhost', 10005)

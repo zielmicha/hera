@@ -91,6 +91,10 @@ class Account(models.Model):
     def is_privileged(self, user):
         return user == self.billing_owner
 
+    @property
+    def api_auth(self):
+        return (self.name, self.api_key)
+
     @classmethod
     def get_account(self, name):
         try:
