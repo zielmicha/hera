@@ -94,8 +94,10 @@ def ws_client_connected(websocket, uri):
         if not client:
             return
 
+        should_close = attrs.get('close', 'true') == 'true'
         asyncio.async(ws_client_read(client, websocket))
-        yield from ws_client_write(client, websocket)
+        yield from ws_client_write(client, websocket,
+                                   wsframe=attrs.get('wsframe'))
 
 def decode_uri(uri):
     id, _, query = uri.partition('?')
@@ -167,13 +169,16 @@ def client_write(client, writer):
         pass
 
 @asyncio.coroutine
-def ws_client_write(client, websocket):
+def ws_client_write(client, websocket, wsframe):
     wrchan, rdchan = client
 
     while True:
         data = yield from connections[wrchan].get()
         if data is EOF:
             break
+
+        if wsframe == 'unicode':
+            data = data.decode('utf8', 'replace')
 
         yield from websocket.send(data)
 

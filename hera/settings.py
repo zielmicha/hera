@@ -43,6 +43,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "deps/bootstrap/dist"),
     os.path.join(BASE_DIR, "deps/bootswatch"),
+    os.path.join(BASE_DIR, "deps/xterm.js/src"),
 )
 
 IMAGE_STORAGE = BASE_DIR + '/images'

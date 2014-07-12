@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% block title %}Attached to sandbox{% endblock %}
+{% block content %}
+<div id=term></div>
+<link href="/static/xterm.css" rel=stylesheet type="text/css">
+<script src="/static/xterm.js"></script>
+<script>
+var streams = JSON.parse(unescape("{{ streams|urlencode }}"));
+var term = new Terminal(),
+    stdin = new WebSocket(streams.stdin.websocket + '?close=false'),
+    stdout = new WebSocket(streams.stdout.websocket + '?wsframe=unicode&close=false');
+
+term.open(document.getElementById('term'));
+term.on('data', function (data) {
+    stdin.send(data);
+});
+stdout.onmessage = function (e) {
+    term.write(e.data);
+}
+</script>
+{% endblock %}
