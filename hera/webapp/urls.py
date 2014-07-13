@@ -23,5 +23,6 @@ urlpatterns = patterns('',
                        url(r'^account/(.+)/overview$', account_views.AccountOverview.as_view()),
                        url(r'^account/(.+)/api$', account_views.AccountAPI.as_view()),
                        url(r'^account/(.+)/templates$', account_views.AccountTemplates.as_view()),
-                       url(r'^run/(.+)/$', run_views.MainView.as_view())
+                       url(r'^run/(\d+)/$', run_views.MainView.as_view()),
+                       url(r'^run/attach$', run_views.attach),
 ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

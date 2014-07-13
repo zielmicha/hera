@@ -23,3 +23,8 @@ def attach(account, vmid):
     request = webapp_models.TerminalRequest(vm=vm, streams=streams)
     request.save()
     return '/run/%d/' % request.id
+
+def attach_by_user(user, vm_id):
+    vm = hera_models.VM.objects.get(vm_id=vm_id)
+    account = vm.get_privileged_account(user)
+    return attach(account, vm_id)

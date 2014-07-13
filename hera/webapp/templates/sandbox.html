@@ -17,4 +17,13 @@
   <li>Closed: {{ resource.closed_at }}
   <li>Running time: {{ resource.running_time|pretty_delta }}
 </ul>
+
+{% if not resource.expired %}
+<h3>Actions</h3>
+<form action="/run/attach" method=POST class="form-horizontal">{% csrf_token %}
+  <input type=hidden value="{{ sandbox.vm_id }}" name=vm_id>
+  <button class="btn btn-primary" type=submit>Attach console</button>
+</form>
+{% endif %}
+
 {% endblock %}

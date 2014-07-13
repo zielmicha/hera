@@ -21,6 +21,7 @@
 <th>UUID
 <th>Created at
 <th>Was running for
+<th>
 </tr>
 {% for vm in recent_vms %}
 <tr>
@@ -28,6 +29,12 @@
 <td>{{ vm.created }}
 <td>{% if vm.expired %}{{ vm.running_time|pretty_delta }}{% else %}
 still running{% endif %}
+<td>{% if not vm.expired %}
+<form action="/run/attach" method=POST class="form-horizontal">{% csrf_token %}
+  <input type=hidden value="{{ vm.user_id }}" name=vm_id>
+  <button class="btn btn-primary btn-xs" type=submit>Attach console</button>
+</form>
+{% endif %}
 </tr>
 {% endfor %}
 </table>

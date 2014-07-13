@@ -4,6 +4,8 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'hera.settings'
 from django.db import models
 from django.db import transaction
 from django.contrib.auth import models as auth_models
+from django.core.exceptions import PermissionDenied
+
 import datetime
 import os
 import jsonfield
@@ -22,6 +24,11 @@ class VM(models.Model):
     @property
     def stats_parsed(self):
         return json.loads(self.stats)
+
+    def get_privileged_account(self, user):
+        if not self.creator.is_privileged(user):
+            raise PermissionDenied()
+        return self.creator
 
 class DerivativeResource(models.Model):
     owner = models.ForeignKey('Account')

@@ -1,7 +1,14 @@
 from django.views.generic import TemplateView
+from django.shortcuts import redirect
+
 from hera.webapp import models
+from hera.webapp import actions
 
 import json
+
+def attach(request):
+    id = request.POST['vm_id']
+    return redirect(actions.attach_by_user(request.user, id))
 
 class BaseView(TemplateView):
     def get_context_data(self):
