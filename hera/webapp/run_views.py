@@ -16,7 +16,7 @@ class BaseView(TemplateView):
 
     def dispatch(self, request, ident, *args, **kwargs):
         self.terminal_request = models.TerminalRequest.objects.get(id=ident)
-        self.terminal_request.vm.creator.is_privileged(request.user)
+        self.terminal_request.vm.is_user_privileged(request.user)
         return super(BaseView, self).dispatch(request, *args, **kwargs)
 
 class MainView(BaseView):

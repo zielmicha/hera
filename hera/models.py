@@ -30,6 +30,9 @@ class VM(models.Model):
             raise PermissionDenied()
         return self.creator
 
+    def is_user_privileged(self, user):
+        self.get_privileged_account(user)
+
 class DerivativeResource(models.Model):
     owner = models.ForeignKey('Account')
     created = models.DateTimeField(auto_now_add=True)
