@@ -51,17 +51,33 @@ proc prepareDisk =
   createDir("/mnt")
   mount(dev="/dev/vda", target="/mnt")
 
+  createDir("/mnt/dev")
+  mount(fs="devtmpfs", target="/mnt/dev")
+  createDir("/mnt/dev/pts")
+  mount(fs="devpts", target="/mnt/dev/pts")
+  createDir("/mnt/proc")
+  mount(fs="proc", target="/mnt/proc")
+  createDir("/mnt/sys")
+  mount(fs="sysfs", target="/mnt/sys")
+
 proc processIncomingMessage =
   if isMessageAvailable():
     let message = readMessage()
     let resp = processMessage(message)
     writeMessage(resp)
 
+proc setupDefaultEnv =
+  putEnv("TERM", "xterm")
+  putEnv("PATH", "/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/games")
+  putEnv("LANG", "en_US.UTF-8")
+  putEnv("USER", "root")
+
 proc main =
   setupMounts()
   openPort()
   setupOptions()
   prepareDisk()
+  setupDefaultEnv()
   while true:
     writeMessage(%{"outofband": %"heartbeat"})
     processIncomingMessage()
