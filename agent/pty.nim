@@ -32,6 +32,7 @@ proc checkedForkPty*(winsize: seq[int], files: seq[TFileHandle]): TPid =
     forkBlock:
       # Fork a process that copies from master to given files
       runCopier(amaster, files)
+    discard close(amaster)
 
   return pid
 
