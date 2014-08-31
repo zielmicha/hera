@@ -3,7 +3,7 @@ setup: virtualenv deps agent
 virtualenv: venv/bin/activate
 
 venv/bin/activate:
-	test -d venv || virtualenv --python=/usr/bin/python3 venv
+	test -d venv || virtualenv --python=/usr/local/bin/python3.4 venv
 	. venv/bin/activate; pip install -Ur requirements.txt
 	touch venv/bin/activate
 

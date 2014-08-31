@@ -1,5 +1,6 @@
 PATH:=$(shell pwd)/buildroot/output/host/usr/bin/:$(PATH)
-GRUNT=$(HOME)/node_modules/grunt-cli/bin/grunt
+GRUNT:=$(shell pwd)/node_modules/grunt-cli/bin/grunt
+#GRUNT=grunt
 
 all: bootstrap busybox kernel buildroot
 

@@ -4,3 +4,10 @@
 /hera/local_settings.py
 *.pyc
 /venv
+/static
+/wheezy.tgz
+*~
+
+
+# Shit from node.js
+node_modules
