@@ -40,7 +40,7 @@ class DerivativeResource(models.Model):
     closed_at = models.DateTimeField(null=True)
 
     base_prize_per_second = MoneyField()
-    custom = jsonfield.JSONField()
+    custom = jsonfield.JSONField(blank=True, null=True)
 
     user_type = models.CharField(max_length=100)
     user_id = models.CharField(max_length=100)
