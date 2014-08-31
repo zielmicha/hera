@@ -94,7 +94,7 @@ class Server:
         cmdline += ' hera.proxy_http_remote=' + settings.PROXY_HTTP
         if self.disk.new:
             cmdline += ' hera.format_disk=true'
-        cmdline += ' hera.seed=' + binascii.hexlify(os.urandom(32)).encode()
+        cmdline += ' hera.seed=' + binascii.hexlify(os.urandom(32)).decode()
         cmdline += ' ' + self.get_ip_config()
         return cmdline
 

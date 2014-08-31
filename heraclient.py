@@ -1,3 +1,4 @@
+# -*- coding=utf-8 -*-
 # Copyright (c) 2014 Michał Zieliński <michal@zielinscy.org.pl>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,7 +29,7 @@ try:
 except ImportError:
     import http.client as httplib
 
-URL = 'http://api.hera.atomshare.net/'
+URL = 'http://api.hera.dev/'
 
 default_auth = None
 
