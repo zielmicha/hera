@@ -7,7 +7,7 @@
 /static
 /wheezy.tgz
 *~
-
+/*.log
 
 # Shit from node.js
 node_modules
