@@ -17,7 +17,7 @@ def MoneyField(*args, **kwargs):
 
 class VM(models.Model):
     creator = models.ForeignKey('Account')
-    stats = jsonfield.JSONField()
+    stats = jsonfield.JSONField(blank=True, null=True)
     vm_id = models.CharField(max_length=120)
     address = models.CharField(max_length=120)
 
