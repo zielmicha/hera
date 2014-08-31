@@ -2,8 +2,8 @@ import os, strutils, json, strtabs
 
 import agentactions, agentio, tools
 
-var
-  requestedDiskFormat = false
+var requestedDiskFormat = false
+var randomSeed: string
 
 proc parseKernelCmdline(line: string): PStringTable =
   result = newStringTable()
@@ -34,6 +34,10 @@ proc setupOptions =
   agentactions.proxyHttpRemoteAddr = table["hera.proxy_http_remote"]
   agentactions.proxyLocalAddr = table["hera.proxy_local"]
   requestedDiskFormat = table["hera.format_disk"] == "true"
+  randomSeed = table["hera.seed"]
+
+proc setupSeed =
+  writeFile("/dev/urandom", randomSeed)
 
 proc setupMounts =
   createDir("/dev")
@@ -76,6 +80,7 @@ proc main =
   setupMounts()
   openPort()
   setupOptions()
+  setupSeed()
   prepareDisk()
   setupDefaultEnv()
   while true:

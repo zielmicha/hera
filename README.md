@@ -6,6 +6,8 @@
 * eatmydata
 * openvpn
 * qemu-system
+* npm
+* build-essential
 
 ### Interhost communication
 

@@ -1,8 +1,9 @@
 PATH:=$(shell pwd)/buildroot/output/host/usr/bin/:$(PATH)
 GRUNT:=$(shell pwd)/node_modules/grunt-cli/bin/grunt
-#GRUNT=grunt
+#GRUNT=../node_modules/grunt-cli/bin/grunt
+#GRUNT=$(HOME)/node_modules/grunt-cli/bin/grunt
 
-all: bootstrap busybox kernel buildroot
+all: bootstrap busybox kernel buildroot nimrod
 
 bash:
 	bash
@@ -32,4 +33,9 @@ nginx:
 	cd nginx; if [ ! -e Makefile ]; then ./configure; fi
 	make -C nginx -j4
 
-.PHONY: busybox kernel buildroot bootstrap nginx
+nimrod:
+	wget 'http://nimrod-lang.org/download/nimrod_0.9.4_linux_amd64.tar.gz'
+	tar xf nimrod_0.9.4_linux_amd64.tar.gz
+	mv nimrod_0.9.4_linux_amd64 nimrod
+
+.PHONY: busybox kernel buildroot bootstrap nginx nimrod
