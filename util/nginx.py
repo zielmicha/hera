@@ -26,7 +26,7 @@ conf = dict(
     port=80 if as_root else 9000,
     suffix='hera.dev',
     servers=[
-        dict(name='www', servers={'/': 'localhost:8000'}),
+        dict(name='www', servers={'/': 'localhost:8001'}),
         dict(name='api', servers={'/': 'localhost:8080'}),
         dict(name='proxy', servers={'/': '%s:%d' % settings.PROXY_HTTP_ADDR,
                                     '/ws/': '%s:%d' % settings.PROXY_WS_ADDR}),
