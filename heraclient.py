@@ -317,6 +317,9 @@ except (ImportError, SyntaxError) as err:
 
         def close(self, data):
             raise import_error
+
+        def read_some(self):
+            raise import_error
 else:
     class Stream(_StreamBase, _BufferedInputFileMixin):
         def __init__(self, urls):
