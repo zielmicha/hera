@@ -36,9 +36,6 @@ proc setupOptions =
   requestedDiskFormat = table["hera.format_disk"] == "true"
   randomSeed = table["hera.seed"]
 
-proc setupSeed =
-  writeFile("/dev/urandom", randomSeed)
-
 proc setupMounts =
   createDir("/dev")
   mount(fs="devtmpfs", target="/dev")
@@ -80,7 +77,7 @@ proc main =
   setupMounts()
   openPort()
   setupOptions()
-  setupSeed()
+  addEntropy(randomSeed)
   prepareDisk()
   setupDefaultEnv()
   while true:
