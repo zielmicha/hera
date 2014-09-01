@@ -46,7 +46,7 @@ class VM:
             '-append', cmdline,
             '-nographic',
 ## Disk
-            '-drive', 'file=%s,if=virtio' % disk,
+            '-drive', 'file=%s,if=virtio,cache=none' % disk,
 ## Virtio serial:
             '-device', 'virtio-serial',
             '-chardev', 'socket,id=agent,path=' + self.socket_name,
