@@ -1,9 +1,11 @@
-CCPATH:=$(shell pwd)/../deps/buildroot/output/host/usr/bin/
+BUILDROOT:=$(shell pwd)/../deps/buildroot
+CCPATH:=$(BUILDROOT)/output/host/usr/bin/
 CCPREFIX:=$(CCPATH)x86_64-buildroot-linux-uclibc-
 PATH:=$(CCPATH):$(PATH)
 NIMRODSOURCES:=$(wildcard *.nim)
 NIMRODFLAGS:=-d:useFork --passC:-I$(shell pwd)/fakelibs
 CC:=x86_64-buildroot-linux-uclibc-gcc
+NIM:=$(BUILDROOT)/output/host/usr/lib/nim/bin/nim
 
 all: build/ramdisk build/kernel
 
@@ -33,13 +35,13 @@ build/agent: build/libagent.a
 
 build/libagent.a: build/symlinks build/ $(NIMRODSOURCES)
 	PATH=$(shell pwd)/build/symlinks:$(PATH) \
-	  nimrod '--nimcache:build/nimcache' '--verbosity:0' '--app:staticlib' \
+	  $(NIM) '--nimcache:build/nimcache' '--verbosity:0' '--app:staticlib' \
 	  '--parallelBuild:1' '--out:build/libagent.a' $(NIMRODFLAGS)  \
 	  compile agent
 	mv libagent.a build/libagent.a
 
 build/agentactions: $(NIMRODSOURCES)
-	nimrod '--nimcache:build/nimcache' '--verbosity:0' '--out:build/agentactions' \
+	$(NIM) '--nimcache:build/nimcache' '--verbosity:0' '--out:build/agentactions' \
 	  $(NIMRODFLAGS) compile agentactions
 
 build/:
