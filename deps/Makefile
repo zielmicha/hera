@@ -28,7 +28,7 @@ bootstrap:
 	#cd bootswatch; $(GRUNT) swatch
 
 nginx:
-	cd nginx; if [ ! -e Makefile ]; then ./configure; fi
+	cd nginx; if [ ! -e Makefile ]; then auto/configure; fi
 	make -C nginx -j4
 
 .PHONY: busybox kernel buildroot bootstrap nginx
