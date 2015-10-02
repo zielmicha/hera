@@ -16,7 +16,7 @@ proc writeMessage*(m: PJsonNode) =
   controllerPort.write(($m) & "\n")
   controllerPort.flushFile()
 
-proc writeErrorMessage*(m: string) =
+proc writeErrorMessage*(m: string) {.locks: 0.} =
   writeMessage(%{"outofband": %"internalerror",
                  "stacktrace": %m})
   writeMessage(%{"status": %"InternalError",

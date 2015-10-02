@@ -8,13 +8,13 @@ proc exitnow*(code: cint): void {.importc: "exit".}
 proc checkedFork*: TPid =
   let res = fork()
   if res < 0:
-    osError(osLastError())
+    osError(osErrorMsg(osLastError()))
   return res
 
 
-template forkBlock*(b: expr) =
+template forkBlock*(b: stmt): stmt {.immediate.} =
   if checkedFork() == 0:
-    b()
+    b
     exitnow(1)
 
 proc runCopier(amaster: TFileHandle, files: openarray[TFileHandle])

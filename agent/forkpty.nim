@@ -10,7 +10,7 @@ type
 
 proc ltzeroerror(err: cint|TPid) =
   if err < 0:
-    osError(osLastError())
+    raiseOSError(osErrorMsg(osLastError()))
 
 proc unlockpt(fd: cint): cint {.importc.}
 proc grantpt(fd: cint): cint {.importc.}

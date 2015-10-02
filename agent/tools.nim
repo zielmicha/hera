@@ -20,7 +20,7 @@ proc readAll*(fd: TFileHandle): string =
     if r == 0:
       break
     if r < 0:
-      osError(osLastError())
+      raiseOsError(osLastError())
     result.add buff[0..r-1]
 
 proc readFileFixed*(filename: string): TaintedString =

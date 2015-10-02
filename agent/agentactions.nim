@@ -20,12 +20,12 @@ proc makeArgs(message: PJsonNode): seq[string] =
     args = @["/bin/sh", "-c", command]
   return args
 
-type TPipe = Tuple[procFd: TFileHandle, finish: proc(): PJsonNode]
+type TPipe = tuple[procFd: TFileHandle, finish: proc(): PJsonNode]
 
 proc makePipeSync(read: bool): TPipe =
   var fds: array[0..1, cint]
   if pipe(fds) < 0:
-    osError(osLastError())
+    raiseOsError(osLastError())
   if not read:
     swap(fds[0], fds[1])
 
