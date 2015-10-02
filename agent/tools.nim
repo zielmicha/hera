@@ -34,7 +34,7 @@ proc addEntropyRaw(data: cstring, size: cint): cint {.importc.}
 
 proc addEntropy*(data: string) =
   if addEntropyRaw(data.cstring, data.len.cint) != 0:
-    osError(osLastError())
+    raiseOsError(osLastError())
 
 when isMainModule:
   echo randomIdent()

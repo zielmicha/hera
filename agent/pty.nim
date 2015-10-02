@@ -8,7 +8,7 @@ proc exitnow*(code: cint): void {.importc: "exit".}
 proc checkedFork*: TPid =
   let res = fork()
   if res < 0:
-    osError(osErrorMsg(osLastError()))
+    raiseOsError(osLastError())
   return res
 
 
