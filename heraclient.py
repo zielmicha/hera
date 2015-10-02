@@ -1,3 +1,4 @@
+# -*- coding=utf-8 -*-
 # Copyright (c) 2014 Michał Zieliński <michal@zielinscy.org.pl>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -315,6 +316,9 @@ except (ImportError, SyntaxError) as err:
             raise import_error
 
         def close(self, data):
+            raise import_error
+
+        def read_some(self):
             raise import_error
 else:
     class Stream(_StreamBase, _BufferedInputFileMixin):

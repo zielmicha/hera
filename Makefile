@@ -3,7 +3,7 @@ setup: virtualenv deps agent
 virtualenv: venv/bin/activate
 
 venv/bin/activate:
-	test -d venv || virtualenv --python=/usr/bin/python3 venv
+	test -d venv || virtualenv --python=/usr/local/bin/python3.4 venv
 	. venv/bin/activate; pip install -Ur requirements.txt
 	touch venv/bin/activate
 
@@ -43,10 +43,10 @@ run_apiserver:
 	make run MODULE=apiserver
 
 run_django:
-	. venv/bin/activate; ./manage.py runserver
+	. venv/bin/activate; ./manage.py runserver 'localhost:8001'
 
 run_netd:
-	sudo python hera/netd.py $(shell id -u)
+	sudo python2.7 hera/netd.py $(shell id -u)
 
 run_nginx:
 	. venv/bin/activate; python util/nginx.py

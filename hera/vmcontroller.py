@@ -10,8 +10,8 @@ import queue
 from hera import errors
 from hera import util
 
-LAUNCH_TIMEOUT = 8
-HEARTBEAT_TIMEOUT = 2
+LAUNCH_TIMEOUT = 40
+HEARTBEAT_TIMEOUT = 40
 MESSAGE_REPLY_TIMEOUT = LAUNCH_TIMEOUT
 
 CLOSE = object()
@@ -46,7 +46,7 @@ class VM:
             '-append', cmdline,
             '-nographic',
 ## Disk
-            '-drive', 'file=%s,if=virtio' % disk,
+            '-drive', 'file=%s,if=virtio,cache=none' % disk,
 ## Virtio serial:
             '-device', 'virtio-serial',
             '-chardev', 'socket,id=agent,path=' + self.socket_name,

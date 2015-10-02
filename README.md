@@ -1,4 +1,13 @@
+### External dependencies
 
+* python-3.4
+* debootstrap
+* supervisord
+* eatmydata
+* openvpn
+* qemu-system
+* npm
+* build-essential
 
 ### Interhost communication
 

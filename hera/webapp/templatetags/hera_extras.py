@@ -11,8 +11,8 @@ def money_format(value):
     minus_style = 'display: inline-block; width: 10px'
     minus = html.format_html('<span style="{0}">{1}</span>', minus_style,
                              '-' if value < 0 else ' ')
-    as_string = str(abs(value))
-    whole, after_dot = as_string.split('.')
+    as_string = '%.10f' % abs(value)
+    whole, _, after_dot = as_string.partition('.')
     cents = after_dot[:2]
     rest = after_dot[2:6]
     result = html.format_html('{0}${1}.{2} {3}', minus, whole, cents, rest)

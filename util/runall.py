@@ -58,8 +58,8 @@ def finish():
             sig = 15
         else:
             sig = 9
-        subprocess.call(['sudo', 'kill', '-%d' % sig] + tasks)
         if not tasks: break
+        subprocess.call(['sudo', 'kill', '-%d' % sig] + tasks)
         time.sleep(0.3)
 
 atexit.register(finish)

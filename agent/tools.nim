@@ -30,5 +30,11 @@ proc readFileFixed*(filename: string): TaintedString =
   finally:
     close(f)
 
+proc addEntropyRaw(data: cstring, size: cint): cint {.importc.}
+
+proc addEntropy*(data: string) =
+  if addEntropyRaw(data.cstring, data.len.cint) != 0:
+    osError(osLastError())
+
 when isMainModule:
   echo randomIdent()
