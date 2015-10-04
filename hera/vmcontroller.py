@@ -40,10 +40,12 @@ class VM:
         tap_name = self.get_tap()
         args = [
             'qemu-system-x86_64',
+            '-bios', 'deps/qboot/bios.bin',
             '-enable-kvm',
             '-kernel', 'agent/build/kernel',
             '-initrd', 'agent/build/ramdisk',
-            '-append', cmdline,
+            '-append', cmdline + ' console=ttyS0 quiet',
+            '-serial', 'mon:stdio',
             '-nographic',
 ## Disk
             '-drive', 'file=%s,if=virtio,cache=none' % disk,
@@ -53,14 +55,14 @@ class VM:
             '-device', 'virtserialport,chardev=agent,name=hera.agent',
 ## Network
             '-net', 'tap,ifname=%s,script=no,downscript=no' % tap_name,
-            '-net', 'nic,model=rtl8139',
+            '-net', 'nic,model=virtio',
 ## Memory
             '-m', str(memory),
         ]
         devnull = open('/dev/null', 'r+')
         self.process = subprocess.Popen(args,
-                                        stdin=devnull,
-                                        stdout=devnull)
+                                        #stdout=devnull,
+                                        stdin=devnull)
 
     def get_tap(self):
         self.netd_connection = socket.socket(socket.AF_UNIX)

@@ -21,3 +21,7 @@
 [submodule "deps/xterm.js"]
 	path = deps/xterm.js
 	url = https://github.com/sourcelair/xterm.js
+[submodule "deps/qboot"]
+	path = deps/qboot
+	url = https://github.com/bonzini/qboot.git
+	ignore = dirty

@@ -20,15 +20,18 @@ build/ramdisk: build/agent build/busybox
 	mkdir -p build/initrd/bin
 	cp build/agent build/initrd/init
 	cp build/busybox build/initrd/bin/busybox
-	cd build/initrd; find ./ | cpio -H newc -o | gzip > ../ramdisk
+	ln -sf /bin/busybox build/initrd/bin/sh
+	cd build/initrd; find ./ | cpio -H newc -o > ../ramdisk
 
 build/busybox:
 	make -C ../deps busybox
 	cp ../deps/busybox/busybox build/busybox
 
-build/kernel:
+KERNEL_IMAGE=../deps/linux/arch/x86/boot/bzImage
+
+build/kernel: $(KERNEL_IMAGE)
 	make -C ../deps kernel
-	cp ../deps/linux/arch/x86/boot/bzImage build/kernel
+	cp $(KERNEL_IMAGE) build/kernel
 
 build/agent: build/libagent.a
 	$(CC) addentropy.c fakelibs/fakedl.c build/libagent.a -static -o build/agent
