@@ -5,9 +5,15 @@
 * supervisord
 * eatmydata
 * openvpn
-* qemu-system
+* qemu-system-x86_64
 * npm
 * build-essential
+
+You should install relatively new `pip`, `virtualenv` and `requests`. There seems to be a bug in `urllib3` shipped in e.g. Debian 8, which prevents `virtualenv` from creating envrionment.
+
+```
+pip3 install --upgrade pip virtualenv requests
+```
 
 ### Interhost communication
 

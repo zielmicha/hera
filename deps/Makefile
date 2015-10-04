@@ -1,7 +1,6 @@
 PATH:=$(shell pwd)/buildroot/output/host/usr/bin/:$(PATH)
 GRUNT:=$(shell pwd)/node_modules/grunt-cli/bin/grunt
-#GRUNT=../node_modules/grunt-cli/bin/grunt
-#GRUNT=$(HOME)/node_modules/grunt-cli/bin/grunt
+CPUCOUNT:=$(getconf _NPROCESSORS_ONLN)
 
 all: bootstrap busybox kernel buildroot qboot
 
@@ -10,15 +9,15 @@ bash:
 
 busybox: buildroot
 	cp busybox.config busybox/.config
-	make -C busybox -j4
+	make -C busybox -j$(CPUCOUNT)
 
 kernel:
 	rsync kernel-configs/4.2.0.config linux/.config
-	make -C linux -j4
+	make -C linux -j$(CPUCOUNT)
 
 buildroot:
 	rsync buildroot.config buildroot/.config
-	make -C buildroot -j4
+	make -C buildroot
 
 BOOTSTRAP=bootstrap/docs/dist/js/bootstrap.min.js
 
@@ -35,7 +34,7 @@ $(BOOTSTRAP):
 
 nginx:
 	cd nginx; if [ ! -e Makefile ]; then auto/configure; fi
-	make -C nginx -j4
+	make -C nginx -j$(CPUCOUNT)
 
 qboot:
 	make -C qboot
