@@ -8,6 +8,7 @@
 * qemu-system
 * npm
 * build-essential
+* libpixman-1-dev
 
 ### Interhost communication
 

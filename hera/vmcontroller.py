@@ -39,7 +39,7 @@ class VM:
     def start_qemu(self, memory, disk, id=1, cmdline=''):
         tap_name = self.get_tap()
         args = [
-            'qemu-system-x86_64',
+            'deps/qemu/x86_64-softmmu/qemu-system-x86_64',
             '-bios', 'deps/qboot/bios.bin',
             '-enable-kvm',
             '-kernel', 'agent/build/kernel',

@@ -25,3 +25,6 @@
 	path = deps/qboot
 	url = https://github.com/bonzini/qboot.git
 	ignore = dirty
+[submodule "deps/qemu"]
+	path = deps/qemu
+	url = https://github.com/qemu/qemu
