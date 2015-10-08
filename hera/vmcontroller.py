@@ -46,6 +46,7 @@ class VM:
             '-initrd', 'agent/build/ramdisk',
             '-append', cmdline + ' console=ttyS0 quiet',
             '-serial', 'mon:stdio',
+            '-nodefaults',
             '-nographic',
 ## Disk
             '-drive', 'file=%s,if=virtio,cache=none' % disk,
