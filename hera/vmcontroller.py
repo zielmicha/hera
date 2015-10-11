@@ -40,7 +40,7 @@ class VM:
         tap_name = self.get_tap()
         args = [
             'qemu-system-x86_64',
-            '-bios', 'deps/qboot/bios.bin',
+            '-bios', 'agent/build/bios.bin',
             '-enable-kvm',
             '-kernel', 'agent/build/kernel',
             '-initrd', 'agent/build/ramdisk',

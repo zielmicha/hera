@@ -7,7 +7,7 @@ NIMRODFLAGS:=-d:useFork --passC:-I$(shell pwd)/fakelibs
 CC:=x86_64-buildroot-linux-uclibc-gcc
 NIM:=$(BUILDROOT)/output/host/usr/lib/nim/bin/nim
 
-all: build/ramdisk build/kernel
+all: build/ramdisk build/kernel build/bios.bin
 
 bash:
 	bash
@@ -26,6 +26,10 @@ build/ramdisk: build/agent build/busybox
 build/busybox:
 	make -C ../deps busybox
 	cp ../deps/busybox/busybox build/busybox
+
+build/bios.bin:
+	make -C ../deps qboot
+	cp ../deps/qboot/bios.bin build/bios.bin
 
 KERNEL_IMAGE=../deps/linux/arch/x86/boot/bzImage
 

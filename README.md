@@ -1,3 +1,7 @@
+## hera sandbox as a service
+
+* [API docs](API.md)
+
 ### External dependencies
 
 * python-3.4
@@ -19,7 +23,7 @@ pip3 install --upgrade pip virtualenv requests
 
 (X connects to Y)
 
-* spawner -> dispatcher (VM creation, port 10001, TLS+client auth)
+* spawner -> dispatcher (VM creation, port 10001)
 * REST -> dispatcher (VM creation, port 10002, HTTP)
 * REST -> vmcontroller (commands, random port, socket)
 * agent -> stream proxy (HTTP)

@@ -3,8 +3,7 @@ import hashlib
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-# use RSA private key sha512 digest
-SECRET_KEY = hashlib.sha512(open(os.path.expanduser('~/.ssh/id_rsa'), 'rb').read()).hexdigest()
+SECRET_KEY = None
 
 # for admin;
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -69,4 +68,8 @@ DEBUG = False
 
 ROOT_URLCONF = 'hera.urls'
 
-exec(open(BASE_DIR + '/hera/local_settings.py').read())
+exec(open(BASE_DIR + '/local_settings.py').read())
+
+if not SECRET_KEY:
+    # use RSA private key sha512 digest
+    SECRET_KEY = hashlib.sha512(open(os.path.expanduser('~/.ssh/id_rsa'), 'rb').read()).hexdigest()
