@@ -1,6 +1,17 @@
 ## hera sandbox as a service
 
 * [API docs](API.md)
+* [Python API wrapper examples](https://github.com/zielmicha/hera/tree/master/examples)
+
+More documentation on its way.
+
+## License
+
+* Hera server is GNU/AGPL-licensed
+* Hera client libraries (heraclient.py) are MIT-licensed
+* Hera examples/ are in public domain (CC0)
+
+## Running Hera on your own cluster
 
 ### External dependencies
 
@@ -27,6 +38,8 @@ pip3 install --upgrade pip virtualenv requests
 * REST -> dispatcher (VM creation, port 10002, HTTP)
 * REST -> vmcontroller (commands, random port, socket)
 * agent -> stream proxy (HTTP)
+
+All modules also require shared directory (e.g. mounted via NFS) `IMAGE_STORE` and a database connection.
 
 ### Pretty graph
 
