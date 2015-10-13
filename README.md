@@ -1,6 +1,8 @@
-## hera sandbox as a service
+![](logo/icon.png)
 
-* [API docs](API.md)
+# sandbox as a service
+
+* [API docs](https://users.atomshare.net/~zlmch/hera/build/)
 * [Python API wrapper examples](https://github.com/zielmicha/hera/tree/master/examples)
 
 More documentation on its way.

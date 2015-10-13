@@ -15,8 +15,11 @@ pre: build
 serve: pre
 	cd $(SLATE); bundle exec middleman server
 
-build/index.html: index.md
+build/index.html: pre index.md
 	cd $(SLATE); rake build
 	rsync --delete -a $(SLATE)/build build
+
+upload: build/index.html
+	cd build; rsync -a . "zlmch@users:WWW/hera"
 
 .PHONY: deps pre serve
