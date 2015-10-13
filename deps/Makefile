@@ -1,6 +1,6 @@
 PATH:=$(shell pwd)/buildroot/output/host/usr/bin/:$(PATH)
 GRUNT:=$(shell pwd)/node_modules/grunt-cli/bin/grunt
-CPUCOUNT:=$(getconf _NPROCESSORS_ONLN)
+CPUCOUNT:=$(shell getconf _NPROCESSORS_ONLN)
 
 all: bootstrap busybox kernel buildroot qboot
 
