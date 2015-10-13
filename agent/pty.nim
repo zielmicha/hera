@@ -8,7 +8,7 @@ proc exitnow*(code: cint): void {.importc: "exit".}
 proc checkedFork*: TPid =
   let res = fork()
   if res < 0:
-    raiseOsError(osLastError())
+    raiseOSError(osLastError())
   return res
 
 
@@ -17,13 +17,13 @@ template forkBlock*(b: stmt): stmt {.immediate.} =
     b
     exitnow(1)
 
-proc runCopier(amaster: TFileHandle, files: openarray[TFileHandle])
+proc runCopier(amaster: FileHandle, files: openArray[FileHandle])
 
 proc makeWinsize*(row: int, col: int): TWinsize =
-  result.ws_row = cushort(row)
-  result.ws_col = cushort(col)
+  result.wsRow = cushort(row)
+  result.wsCol = cushort(col)
 
-proc checkedForkPty*(winsize: seq[int], files: seq[TFileHandle]): TPid =
+proc checkedForkPty*(winsize: seq[int], files: seq[FileHandle]): TPid =
   let ret = forkpty(makeWinsize(winsize[0], winsize[1]))
   let pid = ret.pid
   let amaster = ret.master
@@ -36,7 +36,7 @@ proc checkedForkPty*(winsize: seq[int], files: seq[TFileHandle]): TPid =
 
   return pid
 
-proc runCopier(amaster: TFileHandle, files: openarray[TFileHandle]) =
+proc runCopier(amaster: FileHandle, files: openArray[FileHandle]) =
   finally:
     discard close(amaster)
 
@@ -44,7 +44,7 @@ proc runCopier(amaster: TFileHandle, files: openarray[TFileHandle]) =
     var fds: TFdSet
     var maxfd = 0
     var readfds = @[amaster, files[0]]
-    var writefds: seq[TFileHandle] = @[]
+    var writefds: seq[FileHandle] = @[]
     var errfds = @[amaster, files[0]]
     var timeout = -1
     discard selectfile.select(readfds, writefds, errfds, timeout)
@@ -65,7 +65,7 @@ proc runCopier(amaster: TFileHandle, files: openarray[TFileHandle]) =
 
 when isMainModule:
   let p = checkedForkPty(@[40, 40],
-    @[TFileHandle(0), TFileHandle(1), TFileHandle(2)])
+    @[FileHandle(0), FileHandle(1), FileHandle(2)])
   if p == 0:
     discard execShellCmd("echo aaa; sleep 1; echo bbb; sh")
   else:

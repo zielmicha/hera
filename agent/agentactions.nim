@@ -1,15 +1,15 @@
 import json, strtabs, streams, posix, os, sockets, strutils, osproc
-import jsontool, proxyclient, agentio, process, tools
+import jsontool, agentio, process, tools
 
 var
   proxyWsRemoteAddr*: string
   proxyHttpRemoteAddr*: string
   proxyLocalAddr*: string
 
-proc setupEnviron(message: PJsonNode): PStringTable =
+proc setupEnviron(message: JsonNode): PStringTable =
   nil
 
-proc makeArgs(message: PJsonNode): seq[string] =
+proc makeArgs(message: JsonNode): seq[string] =
   let command = message.getString("command")
 
   var args: seq[string] = @[]
@@ -20,7 +20,7 @@ proc makeArgs(message: PJsonNode): seq[string] =
     args = @["/bin/sh", "-c", command]
   return args
 
-type TPipe = tuple[procFd: TFileHandle, finish: proc(): PJsonNode]
+type TPipe = tuple[procFd: TFileHandle, finish: proc(): JsonNode]
 
 proc makePipeSync(read: bool): TPipe =
   var fds: array[0..1, cint]
@@ -29,7 +29,7 @@ proc makePipeSync(read: bool): TPipe =
   if not read:
     swap(fds[0], fds[1])
 
-  proc finish(): PJsonNode =
+  proc finish(): JsonNode =
     if read:
       return newJNull()
     else:
@@ -50,7 +50,7 @@ proc makePipeNorm(): TPipe =
   sock.connect(parsedAddr[0], TPort(parsedAddr[1].parseInt))
   sock.send("id=$1 role=server\n" % id)
 
-  proc finish(): PJsonNode =
+  proc finish(): JsonNode =
     return %{
        "websocket": %(proxyWsRemoteAddr & url & id),
        "http": %(proxyHttpRemoteAddr & url & id)}
@@ -64,7 +64,7 @@ proc makePipesNorm(stderrToStdout: bool): auto =
                 else: stdoutPipe # whatever
   return (stdinPipe, stdoutPipe, errPipe)
 
-proc exec(message: PJsonNode): PJsonNode =
+proc exec(message: JsonNode): JsonNode =
   log("exec begin")
   let stderrToStdout = message.getString("stderr") == "stdout"
   let doSync = message.getBool("sync", false)
@@ -116,7 +116,7 @@ proc prepareForDeath: auto =
 proc halt =
   writeFile("/proc/sysrq-trigger", "o\n")
 
-proc unpack(message: PJsonNode): PJsonNode =
+proc unpack(message: JsonNode): JsonNode =
   let kind = message.getString("archive_type")
   var compress = message.getString("compress_type")
   if compress == nil:
@@ -155,7 +155,7 @@ proc unpack(message: PJsonNode): PJsonNode =
   discard stdin.procFd.close
   return %{"status": %"ok", "input": stdin.finish(), "output": stderr.finish()}
 
-proc processMessage*(message: PJsonNode): PJsonNode =
+proc processMessage*(message: JsonNode): JsonNode =
   let msgType = message["type"].str
   case msgType:
     of "exec":

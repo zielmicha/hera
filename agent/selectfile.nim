@@ -1,31 +1,31 @@
 # Implementation of select for files.
 import posix
 
-proc createFdSet(fd: var TFdSet, s: seq[TFileHandle], m: var int) =
-  FD_ZERO(fd)
+proc createFdSet(fd: var TFdSet, s: seq[FileHandle], m: var int) =
+  FdZero(fd)
   for i in items(s):
     m = max(m, int(i))
-    FD_SET(i, fd)
+    FdSet(i, fd)
 
-proc pruneFdSet(s: var seq[TFileHandle], fd: var TFdSet) =
+proc pruneFdSet(s: var seq[FileHandle], fd: var TFdSet) =
   var i = 0
   var L = s.len
   while i < L:
-    if FD_ISSET(s[i], fd) == 0'i32:
+    if FdIsset(s[i], fd) == 0'i32:
       s[i] = s[L-1]
       dec(L)
     else:
       inc(i)
   setLen(s, L)
 
-proc timeValFromMilliseconds(timeout = 500): Ttimeval =
+proc timeValFromMilliseconds(timeout = 500): Timeval =
   if timeout != -1:
     var seconds = timeout div 1000
-    result.tv_sec = seconds.int32
-    result.tv_usec = ((timeout - seconds * 1000) * 1000).int32
+    result.tvSec = seconds.int32
+    result.tvUsec = ((timeout - seconds * 1000) * 1000).int32
 
-proc select*(readfds, writefds, exceptfds: var seq[TFileHandle],
-             timeout: int = 500): int {.tags: [FReadIO].} =
+proc select*(readfds, writefds, exceptfds: var seq[FileHandle],
+             timeout: int = 500): int {.tags: [ReadIOEffect].} =
   ## Traditional select function. This function will return the number of
   ## sockets that are ready to be read from, written to, or which have errors.
   ## If there are none; 0 is returned.
@@ -33,7 +33,7 @@ proc select*(readfds, writefds, exceptfds: var seq[TFileHandle],
   ##
   ## A socket is removed from the specific ``seq`` when it has data waiting to
   ## be read/written to or has errors (``exceptfds``).
-  var tv {.noInit.}: Ttimeval = timeValFromMilliseconds(timeout)
+  var tv {.noInit.}: Timeval = timeValFromMilliseconds(timeout)
 
   var rd, wr, ex: TFdSet
   var m = 0

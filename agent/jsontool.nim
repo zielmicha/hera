@@ -1,14 +1,14 @@
 import json, strutils
 import agentio
 
-proc getString*(node: PJsonNode, key: string): string =
+proc getString*(node: JsonNode, key: string): string =
   let v = node[key]
   if v.isNil:
     return nil
   else:
     return v.str
 
-proc getBool*(node: PJsonNode, key: string, default: bool): bool =
+proc getBool*(node: JsonNode, key: string, default: bool): bool =
   let v = node[key]
   if v.isNil:
     return default
@@ -20,7 +20,7 @@ proc getBool*(node: PJsonNode, key: string, default: bool): bool =
     else:
       return default
 
-proc getSubjson*(node: PJsonNode, key: string): PJsonNode =
+proc getSubjson*(node: JsonNode, key: string): JsonNode =
   let v = node[key]
   if v.isNil:
     return nil

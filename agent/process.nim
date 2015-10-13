@@ -7,14 +7,14 @@ proc cchroot(path: cstring): cint {.importc: "chroot", header: "<unistd.h>".}
 
 proc checkedChroot(path: string) =
   if cchroot(path) < 0:
-    raiseOsError(osLastError())
+    raiseOSError(osLastError())
 
-proc write*(fd: TFileHandle, data: string) =
+proc write*(fd: FileHandle, data: string) =
   if write(fd, data.cstring, data.len) < 0:
-    raiseOsError(osLastError())
+    raiseOSError(osLastError())
 
 
-proc checkedForkNopty(files: openarray[TFileHandle]): TPid =
+proc checkedForkNopty(files: openArray[FileHandle]): TPid =
   let res = checkedFork()
   if res == 0:
     # Close stdio
@@ -26,7 +26,7 @@ proc checkedForkNopty(files: openarray[TFileHandle]): TPid =
 
   return res
 
-proc startProcess*(args: seq[string], files: openarray[TFileHandle],
+proc startProcess*(args: seq[string], files: openArray[FileHandle],
                    chroot: string=nil, ptySize: seq[int]=nil): TPid =
   let res = if ptySize != nil:
       checkedForkPty(ptySize, @files)
@@ -55,5 +55,5 @@ proc wExitStatus*(status: cint): int =
 proc waitpid*(pid: TPid, options: cint=0): cint =
   var status: cint
   if waitpid(pid, status, options) < 0:
-    raiseOsError(osLastError())
+    raiseOSError(osLastError())
   return status

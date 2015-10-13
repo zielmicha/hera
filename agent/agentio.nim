@@ -1,7 +1,7 @@
 import json, selectfile, os, osproc, strutils
 
 var
-  controllerPort*: TFile
+  controllerPort*: File
 
 const
   busyboxPath = "/bin/busybox"
@@ -10,9 +10,9 @@ proc busybox*(cmd: seq[string]) =
   let p = startProcess(busyboxPath, args=cmd[0..cmd.len-1], options={poParentStreams})
   let code = p.waitForExit()
   if code != 0:
-    raise newException(EIO, "call to $1 failed" % [cmd.repr])
+    raise newException(IOError, "call to $1 failed" % [cmd.repr])
 
-proc writeMessage*(m: PJsonNode) =
+proc writeMessage*(m: JsonNode) =
   controllerPort.write(($m) & "\n")
   controllerPort.flushFile()
 
@@ -28,13 +28,13 @@ proc log*(message: string) =
                  "line": %message})
 
 proc isMessageAvailable*: bool =
-  var readfd, writefd, exceptfd: seq[TFileHandle]
-  readfd = @[controllerPort.fileHandle]
+  var readfd, writefd, exceptfd: seq[FileHandle]
+  readfd = @[controllerPort.getFileHandle]
   writefd = @[]
   exceptfd = @[]
   return select(readfd, writefd, exceptfd, timeout=500) != 0
 
-proc readMessage*: PJsonNode =
+proc readMessage*: JsonNode =
   parseJson(controllerPort.readLine)
 
 proc openPort* =
