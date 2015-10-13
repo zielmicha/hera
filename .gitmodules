@@ -17,11 +17,15 @@
 [submodule "deps/nginx"]
 	path = deps/nginx
 	url = https://github.com/nginx/nginx
-    ignore = dirty
+	ignore = dirty
 [submodule "deps/xterm.js"]
 	path = deps/xterm.js
 	url = https://github.com/sourcelair/xterm.js
 [submodule "deps/qboot"]
 	path = deps/qboot
 	url = https://github.com/bonzini/qboot.git
+	ignore = dirty
+[submodule "deps/slate"]
+	path = deps/slate
+	url = https://github.com/tripit/slate
 	ignore = dirty
