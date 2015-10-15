@@ -25,7 +25,7 @@ Login using HTTP basic auth. Use account name as login and API key as password.
 ### Input
 
 ```raw
-POST /template/5
+POST /sandbox/
 
 owner=me&memory=256&timeout=100&template=debian8
 
@@ -39,7 +39,35 @@ owner=me&memory=256&timeout=100&template=debian8
 | owner    | target owner user (default: `me`) |
 | memory   | memory allocation for sandbox (in MB) |
 | timeout  | timeout in seconds |
-| template | template ID or name | 
+| template | template ID or name |
+| node_type | required node type to execute on (not implemented) |
+| whole_node | whether the sandbox should execute on node as the only process (not implemented) |
+
+### Asynchronous creation
+
+<aside class="warning">
+not implemented
+</aside>
+
+By default, attempting to create new sandbox when cluster doesn't have enough free resources will return ResourceNotAvailable error.
+If you want Hera to queue your request instead, use `async` mode.
+
+
+| name        | description
+| --------    | ------------ |
+| async       | if `true`, enables the asynchronous mode |
+| webhook_url | Hera will POST this URL when sandbox is ready |
+| webhook_secret | will be passed to the webhook as `secret` parameter |
+| priority    | priority - the lower the better
+
+#### Webhook parameters
+
+
+| name       | description
+| -----      | ----------
+| secret     | the value from `webhook_secret`
+| id         | id of the newly created sandbox
+
 
 ## GET /template/
 
@@ -95,6 +123,11 @@ Change template.
 
 # Errors
 
-| name   | description |
+| name   | description
 | ------ | -----------
 | ok     | no error
+| ResourceNotAvailable      | cluster has not enough resources to fullfil your request at this time
+| SandboxNoLongerAlive      | the sandbox has already finished its execution
+| PermissionDenied          | you are not permitted to access this object
+| MalformedRequest          | your request doesn't make sense
+| NotEnoughMemoryRequested  | sandbox of this type needs more memory than you have requested
