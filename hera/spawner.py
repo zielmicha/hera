@@ -113,6 +113,9 @@ def get_free_mem():
     return (info['MemFree'] + info['Cached']) / 1024
 
 if __name__ == '__main__':
+    import django
+    django.setup()
+
     logging.basicConfig(level=logging.INFO)
     import argparse
     parser = argparse.ArgumentParser(description='Connects to dispatcher and spawn VMs.')

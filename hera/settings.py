@@ -24,7 +24,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.admin',
 
-    'south',
     'registration',
     'hera',
     'hera.webapp',
@@ -71,6 +70,8 @@ ROOT_URLCONF = 'hera.urls'
 NODE_TYPES = {
     '127.0.0.1': 'local'
 }
+
+REGISTRATION_OPEN = False
 
 exec(open(BASE_DIR + '/local_settings.py').read())
 

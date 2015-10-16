@@ -181,6 +181,9 @@ class Spawner:
             q.put(None)
 
 if __name__ == '__main__':
+    import django
+    django.setup()
+
     logging.basicConfig(level=logging.INFO)
     threading.Thread(target=run_http_app).start()
     spawners_loop()
