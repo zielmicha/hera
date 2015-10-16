@@ -65,6 +65,14 @@ def createvm():
     else:
         return jsonify({"status": "ok", "id": vm_id})
 
+@http_app.route('/cluster/')
+def cluster():
+    nodes = []
+    for spawner in spawners:
+        nodes.append({'address': spawner.socket.getpeername(), 'resources': spawner.estimates})
+
+    return jsonify({"status": "ok", "nodes": nodes})
+
 def run_http_app():
     wsgi = wsgiserver.WSGIPathInfoDispatcher({'/': http_app})
     server = wsgiserver.CherryPyWSGIServer(('localhost', 10002), wsgi)

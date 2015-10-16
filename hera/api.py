@@ -18,6 +18,9 @@ class Session:
         if not hmac.compare_digest(expected, api_key):
             raise PermissionDenied()
 
+    def get_cluster(self):
+        return requests.get(settings.DISPATCHER_HTTP + 'cluster').json()
+
     def create_sandbox(self, owner, memory, timeout, disk, whole_node):
         owner = self.verify_owner(owner)
         disk = self.verify_disk(disk)

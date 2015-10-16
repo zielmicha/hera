@@ -121,6 +121,28 @@ Change template.
 | public | boolean     | false
 | name   | string      | debian8
 
+## GET /cluster/
+
+```raw
+GET /cluster/
+
+→
+{
+  "status": "ok",
+  "nodes": [
+    {
+      "address": ["127.0.0.1", 51447],
+      "resources": {
+        "slots": 1000,
+        "memory": 7210.80078125
+      }
+    }
+  ]
+}
+```
+
+Returns cluster state.
+
 # Errors
 
 | name   | description

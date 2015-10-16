@@ -11,7 +11,7 @@ import time
 os.environ['PYTHONUNBUFFERED'] = '1'
 
 tasks = [
-    'apiserver', 'dispatcher', 'django', 'netd', 'nginx', 'proxy', 'spawner'
+    'apiserver', 'dispatcher', 'django', 'netd', 'nginx', 'proxy', 'spawner_0', 'spawner_1'
 ]
 
 CG = '/sys/fs/cgroup/cpu/hera'

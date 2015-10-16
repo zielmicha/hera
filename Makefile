@@ -36,7 +36,7 @@ run_dispatcher:
 run_proxy:
 	make run MODULE=proxy
 
-run_spawner:
+run_spawner_%:
 	make run MODULE=spawner ARG=localhost
 
 run_apiserver:
@@ -58,5 +58,5 @@ cgroup:
 	[ -e /sys/fs/cgroup/cpu/hera ] || sudo mkdir /sys/fs/cgroup/cpu/hera
 	sudo chown $(shell id -u) /sys/fs/cgroup/cpu/hera/*
 
-.PHONY: deps agent run run_proxy run_dispatcher run_spawner \
+.PHONY: deps agent run run_proxy run_dispatcher run_spawner_% \
 	run_apiserver run_django run_netd run_nginx run_all setup

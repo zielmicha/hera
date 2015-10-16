@@ -12,6 +12,10 @@ from bottle import request, response, default_app
 
 default_app.push()
 
+@bottle.get('/cluster/')
+def cluster():
+    return get_session().get_cluster()
+
 @bottle.post('/sandbox/')
 def create_sandbox():
     return get_session().create_sandbox(

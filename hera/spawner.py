@@ -65,7 +65,6 @@ class Spawner:
                 raise errors.ConnectionError()
             response = {'estimates':
                         self.get_resources()}
-            print(response)
             if r:
                 delta = time.time() - last_request_handled
                 sleep_time = MIN_REQUEST_INTERVAL - delta

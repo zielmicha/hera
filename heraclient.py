@@ -197,6 +197,11 @@ def filter_out_if_none(dict):
 def new_disk(size):
     return 'new,%s' % size
 
+def get_cluster(auth=None):
+    resp = requests.get(URL + 'cluster/', auth=get_auth(auth))
+    response_raise(resp)
+    return resp.json()['nodes']
+
 class ApiError(Exception):
     pass
 
