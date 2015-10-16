@@ -1,6 +1,10 @@
 from hera import accounting
 from hera import errors
 
+from cherrypy import wsgiserver
+from flask import jsonify, request
+
+import flask
 import socket
 import queue
 import collections
@@ -8,7 +12,6 @@ import threading
 import uuid
 import json
 import logging
-import bottle
 import random
 
 logger = logging.getLogger("dispatcher")
@@ -20,6 +23,9 @@ spawners = []
 
 VmCreationRequest = collections.namedtuple('VmCreationRequest',
                                            'owner stats res_id')
+
+http_app = flask.Flask(__name__)
+http_app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
 def create_vm(owner, stats):
     res = accounting.add_derivative_vm_resource(owner, stats)
@@ -47,20 +53,22 @@ def spawners_loop():
         sock, addr = listen_sock.accept()
         Spawner(sock).start()
 
-@bottle.post('/createvm')
+@http_app.route('/createvm', methods=['POST'])
 def createvm():
     logger.info('Received createvm request')
-    owner = bottle.request.forms['owner']
-    stats = json.loads(bottle.request.forms['stats'])
+    owner = request.form['owner']
+    stats = json.loads(request.form['stats'])
     try:
         vm_id = create_vm(owner, stats)
     except errors.ResourceNotAvailableError:
-        return {"status": "ResourceNotAvailableError"}
+        return jsonify({"status": "ResourceNotAvailable"})
     else:
-        return {"status": "ok", "id": vm_id}
+        return jsonify({"status": "ok", "id": vm_id})
 
 def run_http_app():
-    bottle.run(port=10002, server='cherrypy')
+    wsgi = wsgiserver.WSGIPathInfoDispatcher({'/': http_app})
+    server = wsgiserver.CherryPyWSGIServer(('localhost', 10002), wsgi)
+    server.start()
 
 class Spawner:
     # Talks to spawner.py
@@ -118,6 +126,7 @@ class Spawner:
             for k, v in self.estimates.items():
                 if request.stats[k] > v:
                     return False
+
                 new_estimates[k] = v - request.stats[k]
             self.estimates = new_estimates
             return True

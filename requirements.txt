@@ -16,3 +16,4 @@ websockets==2.0
 Django==1.6.2
 django-registration==1.0
 psycopg2==2.5.3
+Flask==0.10.1

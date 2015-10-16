@@ -18,7 +18,7 @@ class Session:
         if not hmac.compare_digest(expected, api_key):
             raise PermissionDenied()
 
-    def create_sandbox(self, owner, memory, timeout, disk):
+    def create_sandbox(self, owner, memory, timeout, disk, whole_node):
         owner = self.verify_owner(owner)
         disk = self.verify_disk(disk)
         if timeout > 600: # TODO: add timeout in vm creation
@@ -35,6 +35,7 @@ class Session:
                 'memory': memory,
                 'timeout': timeout,
                 'disk': disk,
+                'slots': 1000 if whole_node else 1,
             }),
         }
         resp = requests.post(settings.DISPATCHER_HTTP + 'createvm',

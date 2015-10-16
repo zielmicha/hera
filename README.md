@@ -26,6 +26,7 @@ More documentation on its way.
 * npm
 * build-essential
 * git
+* bridge-utils
 
 You should install relatively new `pip`, `virtualenv` and `requests`. There seems to be a bug in `urllib3` shipped in e.g. Debian 8, which prevents `virtualenv` from creating envrionment.
 
@@ -33,9 +34,29 @@ You should install relatively new `pip`, `virtualenv` and `requests`. There seem
 pip3 install --upgrade pip virtualenv requests
 ```
 
-### Development dependencies
+### Development
+
+Install:
 
 * bundler
+
+Your `/etc/hosts` should contain entries for the Hera development server:
+
+```
+127.0.0.1	localhost api.hera.dev hera.dev www.hera.dev proxy.hera.dev
+```
+
+Setup database
+
+```
+(. venv/bin/activate && ./manage.py syncdb && ./manage.py migrate)
+```
+
+Run all componenets:
+
+```
+make run_all
+```
 
 ### Interhost communication
 

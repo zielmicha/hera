@@ -27,7 +27,9 @@ def spawn(request):
     vm_id = str(uuid.uuid4())
 
     logging.info('Spawning VM with config %r on port %d', request, port)
-    if os.fork() == 0:
+
+    pid = os.fork()
+    if pid == 0:
         try:
             Server(owner=request['owner'],
                    stats=request['stats'],
@@ -41,7 +43,7 @@ def spawn(request):
             os._exit(1)
     else:
         sock.close()
-        return [vm_id, socket.getfqdn(), port, secret]
+        return [vm_id, socket.getfqdn(), port, secret], pid
 
 class Server:
     def __init__(self, owner, stats, res_id, vm_id, secret, server_sock):

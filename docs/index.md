@@ -41,7 +41,7 @@ owner=me&memory=256&timeout=100&template=debian8
 | timeout  | timeout in seconds |
 | template | template ID or name |
 | node_type | required node type to execute on (not implemented) |
-| whole_node | whether the sandbox should execute on node as the only process (not implemented) |
+| whole_node | whether the sandbox should execute on node as the only process |
 
 ### Asynchronous creation
 

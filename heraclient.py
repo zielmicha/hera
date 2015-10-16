@@ -54,7 +54,7 @@ class Sandbox(object):
         self.auth = get_auth(auth)
 
     @classmethod
-    def create(self, timeout, disk, owner='me', memory=128, auth=None):
+    def create(self, timeout, disk, owner='me', memory=128, whole_node=False, auth=None):
         if isinstance(disk, Template):
             disk = disk.id
         assert isinstance(memory, int)
@@ -65,6 +65,7 @@ class Sandbox(object):
             'timeout': timeout,
             'disk': disk,
             'memory': memory,
+            'whole_node': 'true' if whole_node else 'false'
         }, auth=get_auth(auth))
         response_raise(resp)
         resp = resp.json()

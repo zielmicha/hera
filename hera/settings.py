@@ -68,6 +68,10 @@ DEBUG = False
 
 ROOT_URLCONF = 'hera.urls'
 
+NODE_TYPES = {
+    '127.0.0.1': 'local'
+}
+
 exec(open(BASE_DIR + '/local_settings.py').read())
 
 if not SECRET_KEY:

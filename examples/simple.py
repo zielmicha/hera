@@ -10,6 +10,9 @@ import heraclient
 parser = argparse.ArgumentParser(description='Simple test.')
 parser.add_argument('--template',
                    help='use template')
+parser.add_argument('--whole-node',
+                    help='request whole node',
+                    action='store_true', default=False)
 args = parser.parse_args()
 
 if args.template:
@@ -22,7 +25,7 @@ start = time.time()
 def printdate(*args):
     print('[%.3f]' % (time.time() - start), *args)
 
-s = heraclient.Sandbox.create(timeout=15, disk=disk)
+s = heraclient.Sandbox.create(timeout=15, disk=disk, whole_node=args.whole_node)
 printdate('`create` call returned')
 proc = s.execute(chroot=False, sync=False, args=['busybox', 'cat', '/proc/cmdline'])
 printdate('cmdline: %r' % (proc.read_stdout()))

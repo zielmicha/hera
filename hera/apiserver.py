@@ -2,6 +2,7 @@ from hera import api
 from hera import apimiddleware
 from hera import models
 from hera import settings
+from hera import util
 
 import bottle
 import base64
@@ -18,6 +19,7 @@ def create_sandbox():
         memory=int(request.forms['memory']),
         timeout=float(request.forms['timeout']),
         disk=request.forms['disk'],
+        whole_node=util.is_true(request.forms.get('whole_node')),
     )
 
 @bottle.post('/sandbox/:id/:action')
