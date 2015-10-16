@@ -28,7 +28,7 @@ More documentation on its way.
 * git
 * bridge-utils
 
-You should install relatively new `pip`, `virtualenv` and `requests`. There seems to be a bug in `urllib3` shipped in e.g. Debian 8, which prevents `virtualenv` from creating envrionment.
+You should install relatively new `pip`, `virtualenv` and `requests`. There seems to be a bug in `urllib3` shipped in e.g. Debian 8, which prevents `virtualenv` from creating the environment.
 
 ```
 pip3 install --upgrade pip virtualenv requests
