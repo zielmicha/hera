@@ -14,24 +14,24 @@ resource_timeouts = {
 def add_derivative_resource(owner,
                             user_type,
                             user_id,
-                            base_prize_per_second=0.0):
+                            base_price_per_second=0.0):
     logger.info('add owner=%s user=(%s, %s)', owner, user_type, user_id)
     max_time_left = resource_timeouts[user_type]
     owner = models.Account.objects.get(name=owner)
     res = models.DerivativeResource(owner=owner,
                                     user_type=user_type,
                                     user_id=user_id,
-                                    base_prize_per_second=base_prize_per_second,
+                                    base_price_per_second=base_price_per_second,
                                     expiry=datetime.datetime.now()
                                     + datetime.timedelta(seconds=max_time_left))
     return res
 
 def add_derivative_vm_resource(owner, values):
-    prize = compute_stats_prize(values)
+    price = compute_stats_price(values)
     res = add_derivative_resource(owner,
                                   user_type='vm',
                                   user_id='undefined',
-                                  base_prize_per_second=prize)
+                                  base_price_per_second=price)
     res.save()
     return res
 
@@ -65,22 +65,22 @@ def derivative_resource_used(id, user_type, user_id):
     real_time_left = (now - last_time).total_seconds()
     max_time_left = resource_timeouts[user_type]
     time_left = min(max_time_left, real_time_left)
-    prize = float(res.base_prize_per_second) * time_left
+    price = float(res.base_price_per_second) * time_left
     models.DerivativeResourceUsed(resource=res,
                                   start_time=last_time,
                                   end_time=now,
-                                  prize=prize).save()
+                                  price=price).save()
     models.DerivativeResource.objects.filter(pk=res.pk).update(
         expiry=now + datetime.timedelta(seconds=max_time_left))
     models.Account.objects.filter(pk=res.owner.pk).update(
-        prize_used=F('prize_used') + prize)
+        price_used=F('price_used') + price)
 
 def derivative_resource_closed(id):
     logger.info('close %s', id)
     res = models.DerivativeResource.objects.get(id=id)
     res.close()
 
-prize_per_mb = 4e-9
+price_per_mb = 4e-9
 
-def compute_stats_prize(stats):
-    return stats['memory'] * prize_per_mb
+def compute_stats_price(stats):
+    return stats['memory'] * price_per_mb

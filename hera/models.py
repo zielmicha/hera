@@ -39,7 +39,7 @@ class DerivativeResource(models.Model):
     expiry = models.DateTimeField()
     closed_at = models.DateTimeField(null=True)
 
-    base_prize_per_second = MoneyField()
+    base_price_per_second = MoneyField()
     custom = jsonfield.JSONField(blank=True, null=True)
 
     user_type = models.CharField(max_length=100)
@@ -69,7 +69,7 @@ class DerivativeResourceUsed(models.Model):
     resource = models.ForeignKey(DerivativeResource)
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(auto_now_add=True)
-    prize = MoneyField()
+    price = MoneyField()
 
 class Account(models.Model):
     billing_owner = models.ForeignKey(auth_models.User,
@@ -78,13 +78,13 @@ class Account(models.Model):
     name = models.CharField(max_length=100, unique=True)
     api_key = models.CharField(max_length=50)
 
-    prize_per_second_limit = models.FloatField(default=1e100)
-    prize_used = MoneyField(default=0.0)
-    prize_transferred_to = MoneyField(default=0.0)
+    price_per_second_limit = models.FloatField(default=1e100)
+    price_used = MoneyField(default=0.0)
+    price_transferred_to = MoneyField(default=0.0)
 
     @property
-    def prize_balance(self):
-        return self.prize_transferred_to - self.prize_used
+    def price_balance(self):
+        return self.price_transferred_to - self.price_used
 
     def __str__(self):
         return 'Account ' + self.name
