@@ -33,6 +33,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'data.db'),
+        'OPTIONS': {
+            'timeout': 5,
+        }
     }
 }
 
@@ -44,6 +47,7 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "deps/xterm.js/src"),
 )
 
+QUEUE_LIMIT = 15000
 IMAGE_STORAGE = BASE_DIR + '/images'
 
 DISPATCHER_SOCKET = ('localhost', 10001)

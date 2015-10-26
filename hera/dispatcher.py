@@ -1,5 +1,7 @@
 from hera import accounting
 from hera import errors
+from hera import util
+from hera.queue import VmCreationRequest, CreateQueue, create_vm_object
 
 from cherrypy import wsgiserver
 from flask import jsonify, request
@@ -21,27 +23,33 @@ spawner_timeout = 5
 dispatcher_queue = queue.Queue(0)
 spawners = []
 
-VmCreationRequest = collections.namedtuple('VmCreationRequest',
-                                           'owner stats res_id')
+create_queue = CreateQueue()
 
 http_app = flask.Flask(__name__)
 http_app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
-def create_vm(owner, stats):
+def create_vm(owner, stats, async, async_params=None):
     res = accounting.add_derivative_vm_resource(owner, stats)
-    try:
-        return _create_vm(VmCreationRequest(owner, stats, res.id))
-    except Exception:
-        res.close()
-        raise
+    request = VmCreationRequest(owner, stats, res.id)
+    if async:
+        logger.info('Queuing sandbox creation')
+        create_queue.queue(request, async_params)
+        return request.res_id
+    else:
+        logger.info('Creating sandbox directly')
+        try:
+            return _create_vm(request)
+        except Exception:
+            res.close()
+            raise
 
 def _create_vm(request):
     shuffled_spawners = list(spawners)
     random.shuffle(shuffled_spawners)
     for spawner in shuffled_spawners:
-        result = spawner.create_vm_if_possible(request)
-        if result:
-            return result
+        response = spawner.create_vm_if_possible(request)
+        if response:
+            return create_vm_object(request, response)
     raise errors.ResourceNotAvailableError()
 
 def spawners_loop():
@@ -58,10 +66,14 @@ def createvm():
     logger.info('Received createvm request')
     owner = request.form['owner']
     stats = json.loads(request.form['stats'])
+    async = util.is_true(request.form['async'])
+    async_params = json.loads(request.form['async_params']) if async else None
     try:
-        vm_id = create_vm(owner, stats)
+        vm_id = create_vm(owner, stats, async=async, async_params=async_params)
     except errors.ResourceNotAvailableError:
         return jsonify({"status": "ResourceNotAvailable"})
+    except errors.QueueFull:
+        return jsonify({"status": "QueueFull"})
     else:
         return jsonify({"status": "ok", "id": vm_id})
 
@@ -96,7 +108,7 @@ class Spawner:
         spawners.append(self)
         threading.Thread(target=self._socket_read_loop).start()
 
-    def create_vm_if_possible(self, request):
+    def create_vm_if_possible(self, request: VmCreationRequest):
         # If estimates show that it is possible,
         # asks spawner to create VM. Returns None
         # iff VM was not created.
@@ -122,6 +134,12 @@ class Spawner:
         del self.read_queues[request_id]
         return response
 
+    def check_estimates(self, request):
+        for k, v in self.estimates.items():
+            if request.stats[k] > v:
+                return False
+        return True
+
     def check_and_update_estimates(self, request):
         # Check if spawner has enough resource that
         # it can handle `request`. If it has decrease
@@ -130,19 +148,17 @@ class Spawner:
             return False
 
         with self.estimate_lock:
-            new_estimates = {}
-            for k, v in self.estimates.items():
-                if request.stats[k] > v:
-                    return False
+            if not self.check_estimates(request):
+                return False
 
-                new_estimates[k] = v - request.stats[k]
-            self.estimates = new_estimates
+            for k, v in self.estimates.items():
+                self.estimates[k] = v - request.stats[k]
+
             return True
 
     def _write_spawn_request(self, id, request):
         with self.write_lock:
-            data = dict(request.__dict__,
-                        id=id)
+            data = dict({'owner': request.owner, 'stats': request.stats, 'res_id': request.res_id, 'id': id})
             self.file.write("%s\n" %
                             json.dumps(data))
             self.file.flush()
@@ -151,10 +167,14 @@ class Spawner:
         try:
             while True:
                 self._socket_read_one()
+                self._maybe_unqueue()
         except errors.ConnectionError:
             pass
         finally:
             self.close()
+
+    def _maybe_unqueue(self):
+        create_queue.maybe_unqueue(self)
 
     def _socket_read_one(self):
         data = self._socket_read_request()
@@ -185,5 +205,6 @@ if __name__ == '__main__':
     django.setup()
 
     logging.basicConfig(level=logging.INFO)
+    create_queue.start()
     threading.Thread(target=run_http_app).start()
     spawners_loop()

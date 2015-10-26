@@ -31,3 +31,8 @@ class TemplateAdmin(admin.ModelAdmin):
     list_display = ('owner', 'public', 'disk', 'name')
 
 admin.site.register(models.Template, TemplateAdmin)
+
+class QueuedCreationAdmin(admin.ModelAdmin):
+    list_display = ('created', 'owner')
+
+admin.site.register(models.QueuedCreation, QueuedCreationAdmin)

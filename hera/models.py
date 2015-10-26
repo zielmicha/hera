@@ -33,6 +33,15 @@ class VM(models.Model):
     def is_user_privileged(self, user):
         self.get_privileged_account(user)
 
+class QueuedCreation(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    params = jsonfield.JSONField()
+
+    resource = models.ForeignKey('DerivativeResource')
+    vm = models.ForeignKey('VM', null=True, blank=True)
+    stats = jsonfield.JSONField()
+    owner = models.ForeignKey('Account')
+
 class DerivativeResource(models.Model):
     owner = models.ForeignKey('Account')
     created = models.DateTimeField(auto_now_add=True)
@@ -67,8 +76,8 @@ class DerivativeResource(models.Model):
 
 class DerivativeResourceUsed(models.Model):
     resource = models.ForeignKey(DerivativeResource)
-    start_time = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField(auto_now_add=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
     price = MoneyField()
 
 class Account(models.Model):
@@ -113,7 +122,7 @@ class Account(models.Model):
             # maybe main account not yet created for user?
             try:
                 user = auth_models.User.objects.get(username=name)
-            except Account.DoesNotExist:
+            except auth_models.User.DoesNotExist:
                 raise err
             else:
                 return Account.get_main_for_user(user)

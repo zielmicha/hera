@@ -54,22 +54,40 @@ class Sandbox(object):
         self.auth = get_auth(auth)
 
     @classmethod
-    def create(self, timeout, disk, owner='me', memory=128, whole_node=False, auth=None):
+    def create(self, timeout, disk, owner='me', memory=128, whole_node=False, auth=None,
+               async=False, webhook_url=None, webhook_secret=None, priority=None, priority_growth=None):
         if isinstance(disk, Template):
             disk = disk.id
         assert isinstance(memory, int)
         assert isinstance(timeout, (int, float))
         assert isinstance(disk, str)
-        resp = requests.post(URL + 'sandbox/', data={
+
+        data = {
             'owner': owner,
             'timeout': timeout,
             'disk': disk,
             'memory': memory,
             'whole_node': 'true' if whole_node else 'false'
-        }, auth=get_auth(auth))
+        }
+
+        if async:
+            data['webhook_url'] = webhook_url
+            data['async'] = 'true'
+            if webhook_secret: data['webhook_secret'] = webhook_secret
+            if priority is not None: data['priority'] = priority
+            if priority_growth is not None:  data['priority_growth'] = priority_growth
+        else:
+            assert not priority_growth
+            assert not priority
+            assert not webhook_url
+            assert not webhook_secret
+
+        resp = requests.post(URL + 'sandbox/', data=data, auth=get_auth(auth))
         response_raise(resp)
-        resp = resp.json()
-        return Sandbox(resp['id'], auth=auth)
+
+        if not async:
+            resp = resp.json()
+            return Sandbox(resp['id'], auth=auth)
 
     def save_as_template(self, name=None):
         assert isinstance(name, (type(None), str))

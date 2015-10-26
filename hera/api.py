@@ -1,4 +1,3 @@
-from hera import accounting
 from hera import models
 from hera import settings
 
@@ -21,7 +20,11 @@ class Session:
     def get_cluster(self):
         return requests.get(settings.DISPATCHER_HTTP + 'cluster').json()
 
-    def create_sandbox(self, owner, memory, timeout, disk, whole_node):
+    def create_sandbox(self, owner, memory, timeout, disk, whole_node,
+                       async, webhook_url, webhook_secret, priority, priority_growth):
+        if not async and (webhook_url or priority or priority_growth):
+            return {'status': 'MalformedRequest'}
+
         owner = self.verify_owner(owner)
         disk = self.verify_disk(disk)
         if timeout > 600: # TODO: add timeout in vm creation
@@ -32,28 +35,31 @@ class Session:
         if memory < 32:
             return {'status': 'NotEnoughMemoryRequested'}
 
+        stats = json.dumps({
+            'memory': memory,
+            'timeout': timeout,
+            'disk': disk,
+            'slots': 1000 if whole_node else 1,
+        })
         data = {
             'owner': owner.name,
-            'stats': json.dumps({
-                'memory': memory,
-                'timeout': timeout,
-                'disk': disk,
-                'slots': 1000 if whole_node else 1,
-            }),
+            'stats': stats,
+            'async': async
         }
+        if async:
+            data['async_params'] = json.dumps({
+                'webhook_url': webhook_url,
+                'webhook_secret': webhook_secret,
+                'priority': priority,
+                'priority_growth': priority_growth
+            })
+
         resp = requests.post(settings.DISPATCHER_HTTP + 'createvm',
                              data=data)
         resp = json.loads(resp.text)
 
         if resp["status"] == 'ok':
-            info = resp['id']
-            vm = models.VM(
-                stats=data['stats'],
-                creator=owner,
-                vm_id=info[0],
-                address=','.join(map(str, info[1:])))
-            vm.save()
-            return {'status': 'ok', 'id': vm.vm_id}
+            return {'status': 'ok', 'id': resp['id']}
         else:
             return resp
 

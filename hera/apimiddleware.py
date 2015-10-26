@@ -12,11 +12,11 @@ def make():
             return app.wsgi(environ, start_response)
         except PermissionDenied:
             start_response('403 Permission denied', {})
-            return [json.dumps({'status': 'PermissionDenied'})]
+            return [json.dumps({'status': 'PermissionDenied'}).encode()]
         except ObjectDoesNotExist as err:
             error = DoesNotExist_to_str(err)
             start_response('404 %s' % error, {}) # or 200?
-            return [json.dumps({'status': error})]
+            return [json.dumps({'status': error}).encode()]
 
     return error_catcher
 

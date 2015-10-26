@@ -24,6 +24,11 @@ def create_sandbox():
         timeout=float(request.forms['timeout']),
         disk=request.forms['disk'],
         whole_node=util.is_true(request.forms.get('whole_node')),
+        async=util.is_true(request.forms.get('async')),
+        webhook_url=request.forms.get('webhook_url'),
+        webhook_secret=request.forms.get('webhook_secret'),
+        priority=float(request.forms.get('priority', 0)),
+        priority_growth=float(request.forms.get('priority_growth', 0))
     )
 
 @bottle.post('/sandbox/:id/:action')

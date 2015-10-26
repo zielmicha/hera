@@ -55,20 +55,17 @@ owner=me&memory=256&timeout=100&template=debian8
 
 ### Asynchronous creation
 
-<aside class="warning">
-not implemented
-</aside>
-
 By default, attempting to create new sandbox when cluster doesn't have enough free resources will return ResourceNotAvailable error.
 If you want Hera to queue your request instead, use `async` mode.
 
 
-| name        | description
-| --------    | ------------ |
-| async       | if `true`, enables the asynchronous mode |
-| webhook_url | Hera will POST this URL when sandbox is ready |
-| webhook_secret | will be passed to the webhook as `secret` parameter |
-| priority    | priority - the lower the better
+| name            | description
+| --------        | ------------ |
+| async           | if `true`, enables the asynchronous mode |
+| webhook_url     | Hera will POST this URL when sandbox is ready |
+| webhook_secret  | will be passed to the webhook as `secret` parameter |
+| priority        | priority - the higher the better
+| priority_growth | priority will increase by this value every second the task is in queue
 
 #### Webhook parameters
 
@@ -272,3 +269,4 @@ If you append `?wsframe=unicode`, the server will decode them (UTF-8) and send a
 | PermissionDenied          | you are not permitted to access this object
 | MalformedRequest          | your request doesn't make sense
 | NotEnoughMemoryRequested  | sandbox of this type needs more memory than you have requested
+| QueueFull                 | you are trying to create outrageous amounts of sandboxes (like over 9000)

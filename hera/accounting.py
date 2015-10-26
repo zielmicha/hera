@@ -42,15 +42,17 @@ def derivative_resource_used(id, user_type, user_id):
     if res.user_type != user_type:
         raise ValueError('adding usage %r to resource %r' % (user_type, res.user_type))
     old_user_id = res.user_id
-    if old_user_id == 'undefined':
+    if old_user_id != user_id:
         res.user_id = user_id
         res.save()
-    else:
-        if old_user_id != user_id:
-            raise ValueError('trying to change resource user_id to %r from %r' % (
-                user_id, old_user_id))
+
+    # if old_user_id != 'undefined':
+    #    raise ValueError('tried to change resource user_id to %r from %r' % (user_id, old_user_id))
+
     if res.closed_at:
         raise ValueError('attempted to use closed resource')
+
+    last = None
 
     try:
         last = models.DerivativeResourceUsed.objects\
@@ -61,15 +63,24 @@ def derivative_resource_used(id, user_type, user_id):
         last_time = datetime.datetime.now()
     else:
         last_time = last.end_time
+
     now = datetime.datetime.now()
     real_time_left = (now - last_time).total_seconds()
     max_time_left = resource_timeouts[user_type]
+
     time_left = min(max_time_left, real_time_left)
+
     price = float(res.base_price_per_second) * time_left
-    models.DerivativeResourceUsed(resource=res,
-                                  start_time=last_time,
-                                  end_time=now,
-                                  price=price).save()
+
+    if not last or real_time_left > max_time_left:
+        models.DerivativeResourceUsed(resource=res,
+                                      start_time=last_time,
+                                      end_time=now,
+                                      price=price).save()
+    else:
+        models.DerivativeResourceUsed.objects.filter(pk=last.pk).update(
+            end_time=now, price=F('price') + price)
+
     models.DerivativeResource.objects.filter(pk=res.pk).update(
         expiry=now + datetime.timedelta(seconds=max_time_left))
     models.Account.objects.filter(pk=res.owner.pk).update(

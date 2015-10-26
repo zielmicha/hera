@@ -6,3 +6,6 @@ class TimeoutError(Exception):
 
 class ConnectionError(Exception):
     pass
+
+class QueueFull(Exception):
+    pass
