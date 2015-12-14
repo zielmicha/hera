@@ -17,6 +17,9 @@ from hera import disks
 HALT_TIMEOUT = 0.2
 TIME_BETWEEN_REGISTRATIONS = 2
 
+def numip(i):
+    return socket.inet_ntoa(struct.pack('!I', i))
+
 def spawn(request):
     sock = socket.socket()
     sock.bind(('0.0.0.0', 0))
@@ -75,6 +78,7 @@ class Server:
                 self.vm.close()
 
         self.vm = vmcontroller.VM(
+            gateway_ip=self.get_gateway_ip(),
             heartbeat_callback=heartbeat_callback,
             close_callback=self.after_close)
 
@@ -101,13 +105,18 @@ class Server:
         return cmdline
 
     def get_ip_config(self):
-        def numip(i):
-            return socket.inet_ntoa(struct.pack('!I', i))
-        ip_count = 2**(32-9)
-        ip_id = (self.get_ip_id() % (ip_count - 1)) + 1
+        base = self.get_ip_base()
+        return 'ip=%s::%s:255.255.255.252:sandbox' % (numip(base + 2), numip(base + 1))
+
+    def get_gateway_ip(self):
+        return numip(self.get_ip_base() + 1)
+
+    def get_ip_base(self):
+        ip_count = 2**(32-11)
+        ip_id = ((self.get_ip_id() % (ip_count - 1)) + 1) * 4
         net = '10.128.0.0'
         neti, = struct.unpack('!I', socket.inet_aton(net))
-        return 'ip=%s::%s:255.128.0.0:sandbox' % (numip(neti + ip_id), numip(neti + 1))
+        return neti + ip_id
 
     def get_ip_id(self):
         return uuid.UUID(self.vm_id).int

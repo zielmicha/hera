@@ -6,6 +6,7 @@ import threading
 import pwd
 import time
 import signal
+import ipaddress
 
 parser = argparse.ArgumentParser(description='''
 Call like this:
@@ -16,7 +17,7 @@ ns = parser.parse_args()
 user_name = pwd.getpwuid(ns.uid).pw_name
 
 subprocess.call('brctl addbr brhera', shell=True)
-subprocess.check_call('ifconfig brhera 10.128.0.1/9', shell=True)
+subprocess.call('ifconfig brhera 10.128.0.1/9', shell=True)
 
 socket_path = '/var/run/hera.netd.%d.sock' % ns.uid
 sock = socket.socket(socket.AF_UNIX)
@@ -38,11 +39,15 @@ signal.signal(signal.SIGTERM, sigexit)
 
 def handle(conn):
     file = conn.makefile('rw', 1)
+    gateway_ip = ipaddress.IPv4Address(file.readline().decode('utf8').strip())
+    if gateway_ip not in ipaddress.IPv4Network(u'10.128.0.0/9'):
+        print('Bad gateway IP')
+        return
+
     tap_name = 'tap.hera.' + os.urandom(4).encode('hex')
     subprocess.check_call(['openvpn', '--mktun', '--dev', tap_name,
                            '--user', user_name])
-    subprocess.check_call('ifconfig %s up 0.0.0.0 promisc' % tap_name, shell=True)
-    subprocess.check_call('brctl addif brhera %s' % tap_name, shell=True)
+    subprocess.check_call(['ifconfig', tap_name, str(gateway_ip) + '/30', 'up'])
 
     def exit():
         subprocess.call('openvpn --rmtun --dev %s' % tap_name, shell=True)

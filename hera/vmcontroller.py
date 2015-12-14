@@ -17,7 +17,7 @@ MESSAGE_REPLY_TIMEOUT = LAUNCH_TIMEOUT
 CLOSE = object()
 
 class VM:
-    def __init__(self,
+    def __init__(self, gateway_ip,
                  heartbeat_callback=util.do_nothing,
                  close_callback=util.do_nothing):
         self.init_time = time.time()
@@ -26,6 +26,7 @@ class VM:
         self.read_queue = queue.Queue(0)
         self.heartbeat_callback = heartbeat_callback
         self.close_callback = close_callback
+        self.gateway_ip = gateway_ip
 
         self.netd_connection = None
 
@@ -68,7 +69,10 @@ class VM:
     def get_tap(self):
         self.netd_connection = socket.socket(socket.AF_UNIX)
         self.netd_connection.connect('/var/run/hera.netd.%d.sock' % os.getuid())
-        name = self.netd_connection.makefile('r', 1).readline().strip()
+        file = self.netd_connection.makefile('rw', 1)
+        file.write('%s\n' % self.gateway_ip)
+        file.flush()
+        name = file.readline().strip()
         if not name:
             raise Exception('netd call failed')
         self.log('acquired TAP device')
