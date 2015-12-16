@@ -8,6 +8,7 @@ import json
 import time
 import struct
 import binascii
+import sys
 
 from hera import vmcontroller
 from hera import accounting
@@ -43,6 +44,9 @@ def spawn(request):
         except:
             traceback.print_exc()
         finally:
+            logging.info("VM %s finished", vm_id)
+            sys.stdout.flush()
+            sys.stderr.flush()
             os._exit(1)
     else:
         sock.close()

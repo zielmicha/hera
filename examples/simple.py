@@ -31,7 +31,7 @@ proc = s.execute(chroot=False, sync=False, args=['busybox', 'cat', '/proc/cmdlin
 printdate('cmdline: %r' % (proc.read_stdout()))
 proc = s.execute(chroot=False, sync=False, args=['busybox', 'ls', '/mnt'])
 printdate('ls /mnt: %r' % (proc.read_stdout()))
-proc = s.execute(chroot=False, sync=False, args=['busybox', 'ping', '10.128.0.1'])
-printdate('ping: %r' % (proc.read_stdout()))
+#proc = s.execute(chroot=False, sync=False, args=['busybox', 'ping', '10.128.0.1'])
+#printdate('ping: %r' % (proc.read_stdout()))
 
 printdate('Took %.1f s' % (time.time() - start))

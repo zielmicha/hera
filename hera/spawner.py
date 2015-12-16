@@ -60,7 +60,9 @@ class Spawner:
         last_request_handled = 0
 
         while True:
-            r, w, x = select.select([sock], [], [sock], ESTIMATE_INTERVAL)
+            try:
+                r, w, x = select.select([sock], [], [sock], ESTIMATE_INTERVAL)
+            except InterruptedError: continue
             if x:
                 raise errors.ConnectionError()
             response = {'estimates':

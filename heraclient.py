@@ -29,7 +29,7 @@ try:
 except ImportError:
     import http.client as httplib
 
-URL = 'http://api.hera.dev/'
+URL = os.environ.get('HERA_URL', 'http://api.hera.dev/')
 
 default_auth = None
 
