@@ -91,7 +91,20 @@ class Session:
             return self.get_template(disk, operation='read').id
 
     def get_template(self, ident, operation):
-        instance = models.Template.objects.get(id=ident)
+        try:
+            ident_as_int = int(ident)
+        except ValueError:
+            ident_split = ident.split('/', 1)
+            if len(ident_split) == 1:
+                account = 'system'
+                template_name = ident_split[0]
+            else:
+                account = ident_split[0]
+                template_name = ident_split[1]
+            instance = models.Template.objects.get(name=template_name, owner__name=account)
+        else:
+            instance = models.Template.objects.get(id=ident_as_int)
+
         if instance.is_privileged(self.account, operation=operation):
             return instance
         else:
