@@ -74,5 +74,8 @@ def get_session():
 app = apimiddleware.make()
 
 if __name__ == '__main__':
+    import django
+    django.setup()
+
     host, port = settings.API_HTTP_ADDR
     bottle.run(app=app, host=host, port=port, server='waitress')
