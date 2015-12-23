@@ -13,7 +13,7 @@ import heraclient
 disk = heraclient.new_disk(size='10G')
 
 print('Creating VM')
-s = heraclient.Sandbox.create(timeout=100, disk=disk)
+s = heraclient.Sandbox.create(timeout=600, disk=disk)
 print('Waiting for VM')
 s.wait()
 print('Unpacking')
