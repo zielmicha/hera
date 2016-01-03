@@ -7,6 +7,7 @@ from hera import util
 import bottle
 import base64
 
+from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from bottle import request, response, default_app
 
@@ -39,7 +40,7 @@ def sandbox_action(id, action):
 @bottle.get('/template/')
 def get_templates():
     owner = get_session().account
-    templates = models.Template.objects.filter(owner=owner)
+    templates = models.Template.objects.filter(Q(owner=owner) | Q(public=True))
     return dict(status='ok', templates=[
         dict(id=template.id, name=template.name, public=template.public)
         for template in templates ])
