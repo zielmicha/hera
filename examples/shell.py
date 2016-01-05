@@ -17,7 +17,7 @@ parser.add_argument('--no-chroot', dest='chroot', action='store_false',
                     help='run initial busybox')
 args = parser.parse_args()
 
-s = heraclient.Sandbox.create(timeout=40, disk=args.template,
+s = heraclient.Sandbox.create(timeout=600, disk=args.template,
                               memory=256)
 
 def terminal_size():

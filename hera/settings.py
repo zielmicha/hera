@@ -45,6 +45,7 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "deps/bootstrap/dist"),
     os.path.join(BASE_DIR, "deps/bootswatch"),
     os.path.join(BASE_DIR, "deps/xterm.js/src"),
+    os.path.join(BASE_DIR, "logo"),
 )
 
 QUEUE_LIMIT = 15000

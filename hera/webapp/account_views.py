@@ -1,5 +1,6 @@
 from django.views.generic import TemplateView
 from django.utils.functional import cached_property
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from hera import models
 from hera.webapp import actions
@@ -9,6 +10,10 @@ class BaseView(TemplateView):
         context = TemplateView.get_context_data(self, **kwargs)
         context['account'] = self.account
         return context
+
+    @classmethod
+    def as_view(cls):
+        return login_required(super(TemplateView, cls).as_view())
 
     @cached_property
     def account(self):
