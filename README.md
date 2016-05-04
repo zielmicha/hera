@@ -49,6 +49,7 @@ Your `/etc/hosts` should contain entries for the Hera development server:
 Setup database
 
 ```
+echo 'DEBUG = True' > local_settings.py
 (. venv/bin/activate && ./manage.py syncdb && ./manage.py migrate)
 ```
 

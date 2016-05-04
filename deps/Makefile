@@ -2,7 +2,7 @@ PATH:=$(shell pwd)/buildroot/output/host/usr/bin/:$(PATH)
 GRUNT:=$(shell pwd)/node_modules/grunt-cli/bin/grunt
 CPUCOUNT:=$(shell getconf _NPROCESSORS_ONLN)
 
-all: bootstrap busybox kernel buildroot qboot
+all: bootstrap busybox kernel buildroot qboot nginx
 
 bash:
 	bash

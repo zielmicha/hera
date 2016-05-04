@@ -1,6 +1,5 @@
 /old
 /data.db
-/images
 local_settings.py
 *.pyc
 /venv
