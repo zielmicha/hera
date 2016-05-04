@@ -59,6 +59,8 @@ Run all componenets:
 make run_all
 ```
 
+Hera claims port 80 even during development. If you are really sad about it, run Hera in network namespace.
+
 ### Interhost communication
 
 (X connects to Y)
